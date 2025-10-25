@@ -430,39 +430,16 @@ teamWERX integrates with AI agents through `AGENTS.md`, which contains both conf
 
 ### Proposal Schema
 
-```yaml
----
-title: Add OAuth support to login
-type: goal-change  # or plan-change
-target: implement-login
-status: pending  # pending | approved | rejected
-created: 2025-10-25
-rationale: Users request social login options
----
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `title` | string | ✓ | Brief description of proposed change |
+| `type` | enum | ✓ | goal-change \| plan-change |
+| `target` | string | ✓ | Goal or plan ID this affects |
+| `status` | enum | ✓ | pending \| approved \| rejected |
+| `created` | date | ✓ | ISO 8601 date (YYYY-MM-DD) |
+| `rationale` | string | ✓ | Why this change is proposed |
 
-# Proposal: Add OAuth support
-
-## Proposed Changes
-- Add OAuth2 library dependency
-- Create OAuth provider configuration
-- Update success criteria to include social login
-
-## Impact
-- Adds ~2 days to implementation timeline
-- Requires additional testing for OAuth flow
-
-## Alternatives Considered
-- Session-based auth only (rejected: less flexible)
-- Third-party auth service (rejected: cost)
-```
-
-**Field Descriptions:**
-*   `title`: Brief description of the proposal
-*   `type`: Whether this proposes changes to a goal or plan
-*   `target`: The goal or plan ID this proposal affects
-*   `status`: Current status (pending | approved | rejected)
-*   `created`: ISO 8601 date when proposal was created
-*   `rationale`: Brief explanation of why this change is proposed
+**Body sections:** Proposed Changes, Impact, Alternatives Considered (markdown format)
 
 ## Common Workflows
 
@@ -489,6 +466,32 @@ teamwerx list
 ```bash
 teamwerx propose "..." → teamwerx approve <id> → teamwerx plan
 ```
+
+## Best Practices
+
+**Git Workflow:**
+- Commit after each major change (goal creation, plan updates, task completion)
+- Use `[teamWERX]` prefix for commit messages
+- Tag important milestones with git tags
+- Create branches for experimental goals
+
+**Goal Management:**
+- Use clear, distinctive goal names to avoid confusion between agents
+- Track dependencies in goal frontmatter when goals depend on each other
+- Regularly review all goals with `/teamwerx.list`
+- Archive completed goals to keep workspace focused
+- Limit number of goals in `in-progress` state simultaneously
+
+**Multi-Agent Coordination:**
+- Each agent works on one goal at a time (set with `/teamwerx.use`)
+- Use separate terminal sessions/IDEs for different agents
+- Review overall status with `/teamwerx.list` before switching contexts
+- Document blockers in goal status when work is halted
+
+**Research & Discussion:**
+- Run `/teamwerx.research` once per goal (initial analysis)
+- Use `/teamwerx.discuss` for iterative conversations (multiple rounds)
+- Follow recommended flow: goal → research → discuss → plan → execute
 
 ## Extensibility
 

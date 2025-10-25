@@ -43,9 +43,6 @@ Approve proposal. Update status to approved, apply changes to target goal/plan, 
 ### `/teamwerx.reject [proposal-id] [reason]`
 Reject proposal. Update status to rejected, add reason, archive proposal, prompt commit. Do not modify target.
 
-### `/teamwerx.delta [artifact-path] [version1] [version2]`
-Show diff between versions using git diff. Display unified diff of changes.
-
 ### `/teamwerx.list [--status=<status>]`
 List all goals. Filter by status if specified. Display title, status, created date.
 

@@ -74,7 +74,6 @@ These commands are designed to be used with AI agents:
 ### Change Management
 
 - `teamwerx propose <description>` - Propose a change
-- `teamwerx delta <path> <v1> <v2>` - View version differences
 
 ## Project Structure
 
@@ -88,7 +87,6 @@ project-root/
     ├── research/          # Research reports and discussions
     ├── plans/             # Implementation plans
     ├── proposals/         # Change proposals
-    ├── deltas/            # Version comparisons
     └── .current-goal      # Current working goal
 ```
 
@@ -177,11 +175,11 @@ teamwerx use authentication-feature
 ### Version Tracking
 
 ```bash
-# View changes to a goal
-teamwerx delta .teamwerx/goals/my-goal.md HEAD~1 HEAD
-
-# View git history of a goal
+# View git history for a goal
 git log -- .teamwerx/goals/my-goal.md
+
+# Compare revisions directly with git
+git diff HEAD~1 -- .teamwerx/goals/my-goal.md
 ```
 
 ## Requirements
