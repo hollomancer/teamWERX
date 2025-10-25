@@ -12,6 +12,73 @@ teamWERX is a development framework for individual developers working with multi
 *   **Traceability:** All decisions, discussions, and plans are documented and version-controlled, providing a clear audit trail.
 *   **Token-Efficient:** Agent instructions are designed to minimize token usage while providing complete context.
 
+## Quick Start
+
+### Installation
+
+```bash
+npm install -g teamwerx
+```
+
+### Initialize a Project
+
+```bash
+cd my-project
+git init  # teamWERX requires git
+teamwerx init
+```
+
+This creates the `.teamwerx` directory structure and initializes the `AGENTS.md` file with configuration.
+
+### Create Your First Goal
+
+```bash
+# Create a new goal
+teamwerx goal "Implement user authentication"
+
+# AI agent will prompt for success criteria, then create the goal file
+```
+
+### Research and Plan
+
+```bash
+# Analyze the codebase (AI agent does the work)
+teamwerx research
+
+# Discuss implementation approach
+teamwerx discuss "Should we use JWT or session-based auth?"
+
+# Generate implementation plan
+teamwerx plan
+```
+
+### Execute Tasks
+
+```bash
+# Execute tasks one by one
+teamwerx execute 1
+teamwerx execute 2
+
+# Or execute next pending task
+teamwerx execute
+```
+
+### Typical Multi-Agent Session
+
+```bash
+# Morning: Start work on authentication with Agent A
+teamwerx use implement-auth
+teamwerx status implement-auth  # Review what's left
+teamwerx execute 3              # Execute task 3
+
+# Afternoon: Switch to payment feature with Agent B (different session/agent)
+teamwerx use add-payment
+teamwerx execute 1              # Execute first payment task
+
+# Review all goals
+teamwerx list
+```
+
 ## Technical Architecture
 
 teamWERX will be built as a command-line interface (CLI) tool using Node.js. It will be distributed via npm, allowing for easy installation and integration into existing projects. The CLI will provide a set of slash commands for interacting with the framework.
@@ -111,7 +178,38 @@ This phase is focused on managing changes to goals and plans.
 *   `/teamwerx.reject [proposal]`: Reject a proposal. The proposal is the name of the proposal.
 
 *   `/teamwerx.plan`: Generates a task list based on the research and discussion.
-*   `/teamwerx.execute`: Executes the tasks in the plan, with guidance from the AI assistant.
+
+### Execution
+
+*   `/teamwerx.execute [task-id]`: Executes a specific task from the current plan.
+    *   If `task-id` is provided, executes that specific task
+    *   If no `task-id` is provided, executes the next pending task
+    *   Updates task status to `in-progress` → `completed`
+    *   Prompts developer to review changes and commit
+
+**Execution Flow:**
+1. CLI reads the current plan from `.teamwerx/plans/[goal].md`
+2. CLI identifies the task by ID (or finds next pending task)
+3. CLI outputs task context for the AI agent
+4. AI agent implements the task, creating or modifying code files
+5. CLI updates task status to `completed` in the plan file
+6. CLI prompts developer to review and commit changes
+
+**Example:**
+```bash
+$ teamwerx execute 1
+
+Executing Task 1: Create login form component
+Goal: implement-auth
+Plan: .teamwerx/plans/implement-auth.md
+
+[AI agent creates LoginForm.tsx, adds tests, updates imports...]
+
+Task 1 completed successfully.
+Review changes and commit:
+  git add .
+  git commit -m "[teamWERX] Create login form component"
+```
 
 ## Project Structure
 
@@ -245,6 +343,35 @@ git diff HEAD~2 HEAD -- .teamwerx/goals/implement-login.md
 *   **Use descriptive commit messages**: Clearly describe what changed and why.
 *   **Tag important milestones**: Use git tags to mark significant points in the project lifecycle.
 *   **Create branches for experiments**: Use git branches to explore alternative approaches without affecting the main workflow.
+
+### Git Best Practices
+
+**What to Commit:**
+*   ✅ `.teamwerx/goals/` - All goal files
+*   ✅ `.teamwerx/plans/` - All plan files
+*   ✅ `.teamwerx/research/` - Research reports and discussions
+*   ✅ `.teamwerx/proposals/` - All proposals
+*   ✅ `AGENTS.md` - Agent instructions and configuration
+
+**What to Ignore (.gitignore):**
+*   ❌ `.teamwerx/.current-goal` - Session-specific, not shared between agents
+*   ❌ `.teamwerx/deltas/` - Generated files, can be regenerated with git diff
+*   ❌ `.teamwerx/.temp/` - Temporary working files
+
+**Why Ignore These Files:**
+*   `.current-goal`: Each AI agent session may work on different goals simultaneously. This file is session-specific.
+*   `deltas/`: These are generated on-demand using `git diff`, no need to store them.
+*   `.temp/`: Temporary files used during command execution, not part of the permanent record.
+
+**Recommended .gitignore:**
+```
+# teamWERX - Session and temporary files
+.teamwerx/.current-goal
+.teamwerx/deltas/
+.teamwerx/.temp/
+```
+
+This .gitignore is included in the teamWERX project template.
 
 ## Goal State Management
 
