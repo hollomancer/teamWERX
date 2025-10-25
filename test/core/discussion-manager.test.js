@@ -44,7 +44,7 @@ describe('DiscussionManager', () => {
     test('should initialize empty arrays when discuss file does not exist', async () => {
       const manager = new DiscussionManager(workspace);
       await manager.load();
-      
+
       expect(manager.entries).toEqual([]);
       expect(manager.frontmatter).toEqual({});
     });
@@ -125,7 +125,9 @@ First reflection
 
     test('should pad single digit numbers', () => {
       const manager = new DiscussionManager(workspace);
-      manager.entries = [{ id: 'D05', type: 'discussion', content: 'Discussion 5' }];
+      manager.entries = [
+        { id: 'D05', type: 'discussion', content: 'Discussion 5' },
+      ];
       expect(manager.nextEntryId('D')).toBe('D06');
     });
   });

@@ -71,17 +71,26 @@ describe('CLI End-to-End Tests', () => {
 
       // Check that .teamwerx directory was created
       const teamwerxDir = path.join(testDir, '.teamwerx');
-      const dirExists = await fs.stat(teamwerxDir).then(() => true).catch(() => false);
+      const dirExists = await fs
+        .stat(teamwerxDir)
+        .then(() => true)
+        .catch(() => false);
       expect(dirExists).toBe(true);
 
       // Check for expected subdirectories
       const goalsDir = path.join(teamwerxDir, 'goals');
-      const goalsExists = await fs.stat(goalsDir).then(() => true).catch(() => false);
+      const goalsExists = await fs
+        .stat(goalsDir)
+        .then(() => true)
+        .catch(() => false);
       expect(goalsExists).toBe(true);
 
       // Check for AGENTS.md file
       const agentsFile = path.join(testDir, 'AGENTS.md');
-      const agentsExists = await fs.stat(agentsFile).then(() => true).catch(() => false);
+      const agentsExists = await fs
+        .stat(agentsFile)
+        .then(() => true)
+        .catch(() => false);
       expect(agentsExists).toBe(true);
     });
 
@@ -114,7 +123,12 @@ describe('CLI End-to-End Tests', () => {
     test('should handle goal creation setup', async () => {
       // Create a basic goal file manually for testing
       const goalName = 'test-feature';
-      const goalFile = path.join(testDir, '.teamwerx', 'goals', `${goalName}.md`);
+      const goalFile = path.join(
+        testDir,
+        '.teamwerx',
+        'goals',
+        `${goalName}.md`,
+      );
 
       const goalContent = `---
 title: "Test Feature"
@@ -125,11 +139,16 @@ success_criteria:
 
 Test goal content.`;
 
-      await fs.mkdir(path.join(testDir, '.teamwerx', 'goals'), { recursive: true });
+      await fs.mkdir(path.join(testDir, '.teamwerx', 'goals'), {
+        recursive: true,
+      });
       await fs.writeFile(goalFile, goalContent);
 
       // Verify file was created
-      const fileExists = await fs.stat(goalFile).then(() => true).catch(() => false);
+      const fileExists = await fs
+        .stat(goalFile)
+        .then(() => true)
+        .catch(() => false);
       expect(fileExists).toBe(true);
     });
   });

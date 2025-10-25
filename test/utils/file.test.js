@@ -25,7 +25,7 @@ describe('File Utils', () => {
     if (originalCwd) {
       process.chdir(originalCwd);
     }
-    
+
     // Clean up the temporary directory
     try {
       await fs.rm(testDir, { recursive: true, force: true });
@@ -134,7 +134,7 @@ created: 2025-10-25
 
 This is the content.`;
       await fs.writeFile(filePath, content);
-      
+
       const result = await readFileWithFrontmatter(filePath);
       expect(result.data.title).toBe('Test Goal');
       expect(result.data.created).toEqual(new Date('2025-10-25'));
@@ -145,7 +145,7 @@ This is the content.`;
       const filePath = path.join(testDir, 'test.md');
       const content = 'Just plain content.';
       await fs.writeFile(filePath, content);
-      
+
       const result = await readFileWithFrontmatter(filePath);
       expect(result.data).toEqual({});
       expect(result.content.trim()).toBe('Just plain content.');
@@ -157,9 +157,9 @@ This is the content.`;
       const filePath = path.join(testDir, 'output.md');
       const data = { title: 'Test', created: '2025-10-25' };
       const content = 'Body content';
-      
+
       await writeFileWithFrontmatter(filePath, data, content);
-      
+
       const fileContent = await fs.readFile(filePath, 'utf8');
       expect(fileContent).toContain('title: Test');
       expect(fileContent).toContain('created: \'2025-10-25\'');
@@ -170,9 +170,9 @@ This is the content.`;
       const filePath = path.join(testDir, 'output.md');
       const data = {};
       const content = 'Just content';
-      
+
       await writeFileWithFrontmatter(filePath, data, content);
-      
+
       const fileContent = await fs.readFile(filePath, 'utf8');
       expect(fileContent).toContain('Just content');
     });
@@ -180,12 +180,12 @@ This is the content.`;
 
   describe('getCurrentGoal', () => {
     const { getCurrentGoal, setCurrentGoal } = require('../../lib/utils/file');
-    
+
     test('should return null when no current goal is set', async () => {
       // Change to test directory for this test
       originalCwd = process.cwd();
       process.chdir(testDir);
-      
+
       const result = await getCurrentGoal();
       expect(result).toBeNull();
     });
@@ -193,7 +193,7 @@ This is the content.`;
     test('should return current goal after setting it', async () => {
       originalCwd = process.cwd();
       process.chdir(testDir);
-      
+
       await ensureDir(path.join(testDir, '.teamwerx'));
       await setCurrentGoal('my-goal');
       const result = await getCurrentGoal();
@@ -203,11 +203,11 @@ This is the content.`;
 
   describe('listGoals', () => {
     const { listGoals } = require('../../lib/utils/file');
-    
+
     test('should return empty array when goals directory does not exist', async () => {
       originalCwd = process.cwd();
       process.chdir(testDir);
-      
+
       const goals = await listGoals();
       expect(goals).toEqual([]);
     });
@@ -215,26 +215,26 @@ This is the content.`;
     test('should list all goal files', async () => {
       originalCwd = process.cwd();
       process.chdir(testDir);
-      
+
       const goalsDir = path.join(testDir, '.teamwerx', 'goals');
       await ensureDir(goalsDir);
-      
+
       await writeFileWithFrontmatter(
         path.join(goalsDir, 'goal1.md'),
         { title: 'Goal 1', created: '2025-10-25' },
-        'Content 1'
+        'Content 1',
       );
-      
+
       await writeFileWithFrontmatter(
         path.join(goalsDir, 'goal2.md'),
         { title: 'Goal 2', created: '2025-10-26' },
-        'Content 2'
+        'Content 2',
       );
 
       const goals = await listGoals();
       expect(goals).toHaveLength(2);
-      expect(goals.find(g => g.filename === 'goal1')).toBeDefined();
-      expect(goals.find(g => g.filename === 'goal2')).toBeDefined();
+      expect(goals.find((g) => g.filename === 'goal1')).toBeDefined();
+      expect(goals.find((g) => g.filename === 'goal2')).toBeDefined();
     });
   });
 });

@@ -2,7 +2,7 @@
 
 /**
  * teamWERX CLI Entry Point
- * 
+ *
  * A development framework for individual developers working with multiple AI agents.
  */
 
@@ -83,7 +83,9 @@ program
   .option('--goal <goal>', 'Specify the goal slug')
   .option('--task <task>', 'Add a task (repeatable)', collectValues, [])
   .option('--interactive', 'Interactively add tasks via prompts')
-  .action((considerations, cmdOptions) => planCommand(considerations, cmdOptions));
+  .action((considerations, cmdOptions) =>
+    planCommand(considerations, cmdOptions),
+  );
 
 program
   .command('execute [goal-name]')
@@ -94,14 +96,20 @@ program
   .command('complete [issue-or-title]')
   .description('Complete tasks and record implementations')
   .option('--goal <goal>', 'Specify the goal slug')
-  .option('--source <source>', 'Source: fix|manual|batch (default: batch)', 'batch')
+  .option(
+    '--source <source>',
+    'Source: fix|manual|batch (default: batch)',
+    'batch',
+  )
   .option('--notes <text>', 'Notes for batch completion')
   .option('--limit <number>', 'Number of tasks to complete (batch mode)', 5)
   .action(completeCommand);
 
 program
   .command('archive [goal-name]')
-  .description('Archive a completed goal and move its artifacts into .teamwerx/archive/')
+  .description(
+    'Archive a completed goal and move its artifacts into .teamwerx/archive/',
+  )
   .option('--yes', 'Skip confirmation prompts')
   .action(archiveCommand);
 
@@ -130,7 +138,7 @@ program.exitOverride();
 
 try {
   program.parse(process.argv);
-  
+
   // Show help if no command provided
   if (!process.argv.slice(2).length) {
     program.outputHelp();

@@ -29,11 +29,18 @@ describe('Goal Command', () => {
       const fs = require('fs').promises;
       const path = require('path');
       const goalPath = path.join(env.goalsDir, 'test-goal-description.md');
-      const exists = await fs.access(goalPath).then(() => true).catch(() => false);
+      const exists = await fs
+        .access(goalPath)
+        .then(() => true)
+        .catch(() => false);
       expect(exists).toBe(true);
 
       // Check console output
-      expect(env.console.output.some(output => output.includes('Goal created successfully'))).toBe(true);
+      expect(
+        env.console.output.some((output) =>
+          output.includes('Goal created successfully'),
+        ),
+      ).toBe(true);
     } finally {
       inquirer.prompt = originalPrompt;
     }
@@ -43,7 +50,8 @@ describe('Goal Command', () => {
     // Mock inquirer for both title and criteria prompts
     const inquirer = require('inquirer');
     const originalPrompt = inquirer.prompt;
-    inquirer.prompt = jest.fn()
+    inquirer.prompt = jest
+      .fn()
       .mockResolvedValueOnce({ title: 'Interactive Goal' })
       .mockResolvedValue({ criterion: '' });
 
@@ -52,7 +60,11 @@ describe('Goal Command', () => {
 
       expect(result.slug).toBe('interactive-goal');
       expect(result.title).toBe('Interactive Goal');
-      expect(env.console.output.some(output => output.includes('Goal created successfully'))).toBe(true);
+      expect(
+        env.console.output.some((output) =>
+          output.includes('Goal created successfully'),
+        ),
+      ).toBe(true);
     } finally {
       inquirer.prompt = originalPrompt;
     }
@@ -62,7 +74,8 @@ describe('Goal Command', () => {
     // Mock inquirer to provide empty criteria
     const inquirer = require('inquirer');
     const originalPrompt = inquirer.prompt;
-    inquirer.prompt = jest.fn()
+    inquirer.prompt = jest
+      .fn()
       .mockResolvedValueOnce({ title: 'Test Goal' })
       .mockResolvedValue({ criterion: '' });
 
@@ -73,7 +86,11 @@ describe('Goal Command', () => {
     }
 
     expect(env.exit.getExitCode()).toBe(1);
-    expect(env.console.errors.some(error => error.includes('success criterion is required'))).toBe(true);
+    expect(
+      env.console.errors.some((error) =>
+        error.includes('success criterion is required'),
+      ),
+    ).toBe(true);
 
     inquirer.prompt = originalPrompt;
   });
@@ -83,7 +100,10 @@ describe('Goal Command', () => {
     const originalCwd = process.cwd();
     const fs = require('fs').promises;
     const os = require('os');
-    const tempDir = require('path').join(os.tmpdir(), `no-teamwerx-${Date.now()}`);
+    const tempDir = require('path').join(
+      os.tmpdir(),
+      `no-teamwerx-${Date.now()}`,
+    );
     await fs.mkdir(tempDir);
     process.chdir(tempDir);
 
@@ -94,7 +114,9 @@ describe('Goal Command', () => {
     }
 
     expect(env.exit.getExitCode()).toBe(1);
-    expect(env.console.errors.some(error => error.includes('not initialized'))).toBe(true);
+    expect(
+      env.console.errors.some((error) => error.includes('not initialized')),
+    ).toBe(true);
 
     // Cleanup
     process.chdir(originalCwd);

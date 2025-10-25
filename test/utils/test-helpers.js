@@ -14,7 +14,10 @@ const os = require('os');
  * @returns {Promise<Object>} Test workspace utilities
  */
 async function createTestWorkspace(prefix = 'teamwerx-test') {
-  const testDir = path.join(os.tmpdir(), `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  const testDir = path.join(
+    os.tmpdir(),
+    `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+  );
   await fs.mkdir(testDir, { recursive: true });
 
   const teamwerxDir = path.join(testDir, '.teamwerx');
@@ -54,10 +57,12 @@ async function createTestWorkspace(prefix = 'teamwerx-test') {
     createGoal: async (name, data = {}, content = '') => {
       const frontmatter = [
         '---',
-        ...Object.entries(data).map(([key, value]) => `${key}: ${JSON.stringify(value)}`),
+        ...Object.entries(data).map(
+          ([key, value]) => `${key}: ${JSON.stringify(value)}`,
+        ),
         '---',
         '',
-        content
+        content,
       ].join('\n');
 
       await fs.writeFile(path.join(goalsDir, `${name}.md`), frontmatter);
@@ -72,10 +77,12 @@ async function createTestWorkspace(prefix = 'teamwerx-test') {
     createPlan: async (name, data = {}, content = '') => {
       const frontmatter = [
         '---',
-        ...Object.entries(data).map(([key, value]) => `${key}: ${JSON.stringify(value)}`),
+        ...Object.entries(data).map(
+          ([key, value]) => `${key}: ${JSON.stringify(value)}`,
+        ),
         '---',
         '',
-        content
+        content,
       ].join('\n');
 
       await fs.writeFile(path.join(plansDir, `${name}.md`), frontmatter);
@@ -99,7 +106,7 @@ async function createTestWorkspace(prefix = 'teamwerx-test') {
       } catch (err) {
         // Ignore cleanup errors
       }
-    }
+    },
   };
 }
 
@@ -141,7 +148,7 @@ function mockConsole() {
       output.length = 0;
       errors.length = 0;
       warnings.length = 0;
-    }
+    },
   };
 }
 
@@ -166,7 +173,7 @@ function mockProcessExit() {
      */
     restore: () => {
       process.exit = originalProcessExit;
-    }
+    },
   };
 }
 
@@ -194,7 +201,7 @@ async function createTestEnvironment(prefix = 'teamwerx-test') {
       consoleMock.restore();
       exitMock.restore();
       await workspace.cleanup();
-    }
+    },
   };
 }
 
@@ -202,5 +209,5 @@ module.exports = {
   createTestWorkspace,
   mockConsole,
   mockProcessExit,
-  createTestEnvironment
+  createTestEnvironment,
 };

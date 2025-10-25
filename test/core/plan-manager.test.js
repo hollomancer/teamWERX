@@ -44,7 +44,7 @@ describe('PlanManager', () => {
     test('should initialize empty arrays when plan file does not exist', async () => {
       const manager = new PlanManager(workspace);
       await manager.load();
-      
+
       expect(manager.tasks).toEqual([]);
       expect(manager.frontmatter).toEqual({});
     });
@@ -169,7 +169,7 @@ tasks:
     test('should update an existing task', () => {
       const manager = new PlanManager(workspace);
       manager.addTask({ title: 'Original task' });
-      
+
       const updated = manager.updateTask('T01', {
         status: 'in-progress',
         notes: 'Updated notes',
@@ -183,7 +183,7 @@ tasks:
 
     test('should throw error for non-existent task', () => {
       const manager = new PlanManager(workspace);
-      
+
       expect(() => {
         manager.updateTask('T99', { status: 'completed' });
       }).toThrow('Task T99 not found in plan.');
@@ -194,7 +194,7 @@ tasks:
     test('should mark a task as completed', () => {
       const manager = new PlanManager(workspace);
       manager.addTask({ title: 'Task to complete' });
-      
+
       const completed = manager.completeTask('T01');
 
       expect(completed.status).toBe('completed');
@@ -203,7 +203,7 @@ tasks:
     test('should complete task with notes and source', () => {
       const manager = new PlanManager(workspace);
       manager.addTask({ title: 'Task to complete' });
-      
+
       const completed = manager.completeTask('T01', 'Finished!', 'manual');
 
       expect(completed.status).toBe('completed');

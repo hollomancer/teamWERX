@@ -68,59 +68,59 @@ The teamWERX workflow is divided into main phases. Multiple goals can progress t
 Process flow for a goal (teamWERX)
 
 +---------------------------+
-| Developer creates goal    |
+| Developer creates goal |
 +------------+--------------+
-             |
-             | teamwerx goal
-             v
+|
+| teamwerx goal
+v
 +---------------------------+
-| Goal: draft               |
+| Goal: draft |
 +------------+--------------+
-             |
-             | teamwerx research
-             v
+|
+| teamwerx research
+v
 +---------------------------+
-| AI analyzes codebase      |
+| AI analyzes codebase |
 +------------+--------------+
-             |
-             v
+|
+v
 +---------------------------+
-| Research report created   |
+| Research report created |
 +------------+--------------+
-             |
-             | teamwerx discuss
-             v
+|
+| teamwerx discuss
+v
 +---------------------------+
-| Iterative discussion      |
+| Iterative discussion |
 | (multiple rounds) <-------+
 +------------+--------------+
-             |
-             | teamwerx plan
-             v
+|
+| teamwerx plan
+v
 +---------------------------+
-| Goal: open, Plan created  |
+| Goal: open, Plan created |
 +------------+--------------+
-             |
-             | teamwerx execute
-             v
+|
+| teamwerx execute
+v
 +---------------------------+
-| Goal: in-progress         |
+| Goal: in-progress |
 +------------+--------------+
-             |
-             | Execute tasks
-             v
-         +------------------+
-         | All tasks done?  |
-         +---+---------+----+
-             |         |
-         No  |         | Yes
-             v         v
-   (loop back to)   +---------------+
-   Goal: in-progress| Goal: completed|
-                    +---------------+
-
+|
+| Execute tasks
+v
++------------------+
+| All tasks done? |
++---+---------+----+
+| |
+No | | Yes
+v v
+(loop back to) +---------------+
+Goal: in-progress| Goal: completed|
++---------------+
 
 **Key Points:**
+
 - Goals start in `draft` state and progress through research and planning
 - The discussion phase is iterative (multiple rounds possible)
 - Execution moves the goal to `in-progress`
@@ -136,12 +136,14 @@ All commands are **non-destructive**. Instead of overwriting existing artifacts,
 **`teamwerx init`**
 
 Initializes teamWERX in the current project. This command:
+
 - Verifies that the current directory is a git repository (fails if not)
 - Creates the `.teamwerx` directory structure
 - Creates template directories for goals and proposals
 - Creates or updates `AGENTS.md` with teamWERX configuration in YAML frontmatter
 
 **Prerequisites:**
+
 - The project must be initialized as a git repository (`git init`)
 - The command must be run from the project root directory
 
@@ -150,12 +152,14 @@ Initializes teamWERX in the current project. This command:
 **`teamwerx goal [description]`**
 
 Creates a new goal with automatic workspace setup. Prompts for success criteria if not provided. Saves:
+
 - Goal file to `.teamwerx/goals/[kebab-case-title].md`
 - Creates numbered workspace `.teamwerx/goals/00X-[slug]/` with discussion, plan, and research templates
 
 **`teamwerx status [goal-name] [--list] [--status <status>] [--context] [--summary]`**
 
 Shows detailed status of a goal (or all goals if omitted).
+
 - Default: Goal status, success criteria, plan info
 - `--list`: Show table view of all goals (filter with `--status`)
 - `--context`: Show project context with tech stack and directories
@@ -182,6 +186,7 @@ This command is designed to be executed by an AI agent.
 **`teamwerx reflect [--goal <goal>] [--notes <text>] [--inspire] [--dry-run]`**
 
 Adds a reflection entry (R01, R02, ...) to capture learning and adaptations during execution. Records what worked, what didn't, and adjustments made.
+
 - `--inspire`: Auto-generate suggestions based on plan state
 - `--dry-run`: Record a dry-run simulation assessment
 
@@ -192,6 +197,7 @@ This command is designed to be executed by an AI agent.
 **`teamwerx plan [considerations] [--goal <goal>] [--task <task>] [--interactive]`**
 
 Adds numbered tasks (T01, T02, ...) to the goal plan.
+
 - Use `--task` flag for individual tasks
 - Use `--interactive` for prompted entry
 - Use no flags for AI-driven planning mode
@@ -201,6 +207,7 @@ This command is designed to be executed by an AI agent.
 **`teamwerx execute [goal-name]`**
 
 Executes tasks from the plan:
+
 1. Read plan, identify next pending task
 2. Implement task (create/modify code files)
 3. Update task status to completed in plan file
@@ -213,6 +220,7 @@ This command is designed to be executed by an AI agent.
 **`teamwerx complete [issue-or-title] [--goal <goal>] [--source <source>] [--notes <text>] [--limit <number>]`**
 
 Completes tasks and records implementations.
+
 - `--source fix`: Record an issue correction
 - `--source manual`: Collect staged git changes into task
 - `--source batch`: Batch-complete up to 5 pending tasks (default)
@@ -261,10 +269,12 @@ project-root/
 ### Structure Details
 
 Each goal has two parts:
+
 1. **Goal file** (`goal-name.md`) - Metadata, success criteria, and notes
 2. **Numbered workspace** (`00X-goal-name/`) - Discussion, plan, research, and implementation records
 
 **Workspace numbering:**
+
 - Goals get sequential three-digit IDs (`001`, `002`, ...) derived from filesystem
 - Discussion entries use `D01`, `D02`, ...
 - Reflection entries use `R01`, `R02`, ...
@@ -272,12 +282,14 @@ Each goal has two parts:
 - Implementation records match task IDs (`T01.md`, `T02.md`, ...)
 
 **Files to commit:**
+
 - `.teamwerx/goals/` (goal files and workspaces)
 - `.teamwerx/proposals/`
 - `.teamwerx/archive/`
 - `AGENTS.md`
 
 **Files to ignore:**
+
 - `.teamwerx/.current-goal` (local state)
 - `.teamwerx/.temp/` (temporary files)
 
@@ -294,6 +306,7 @@ teamwerx:
 ```
 
 **Configuration Fields:**
+
 - `version`: teamWERX specification version
 - `initialized`: ISO 8601 date when teamWERX was initialized
 
@@ -304,6 +317,7 @@ teamwerx:
 teamWERX is designed to work seamlessly with AI coding assistants. The `AGENTS.md` file provides instructions that AI agents can read and follow.
 
 When you run commands like `teamwerx research` or `teamwerx plan`, the AI agent should:
+
 1. Read the relevant sections of `AGENTS.md`
 2. Perform the requested analysis or action
 3. Save the results to the appropriate location
@@ -324,6 +338,7 @@ Goals progress through the following states:
 **State transitions:** Goal status is automatically derived from plan state. Manual overrides possible for `cancelled` and `archived`.
 
 **Plan/Task states:**
+
 - Plans: `pending` → `in-progress` → `completed` (or `blocked`)
 - Tasks: `pending` → `in-progress` → `completed`
 - Plan status automatically reflects task statuses
@@ -334,23 +349,23 @@ All artifacts use YAML frontmatter for machine-readability.
 
 ### Goal Schema
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `title` | string | ✓ | Brief, descriptive name |
-| `created` | date | ✓ | ISO 8601 date (YYYY-MM-DD) |
-| `success_criteria` | array | ✓ | Success criteria as flat array |
-| `outcomes` | array | - | Measurable metrics with targets and measurement methods (optional) |
-| `dependencies` | array | - | Goal IDs that must complete first (optional) |
-| `status` | enum | - | Manual override: cancelled \| archived (auto-derived otherwise) |
+| Field              | Type   | Required | Description                                                        |
+| ------------------ | ------ | -------- | ------------------------------------------------------------------ |
+| `title`            | string | ✓        | Brief, descriptive name                                            |
+| `created`          | date   | ✓        | ISO 8601 date (YYYY-MM-DD)                                         |
+| `success_criteria` | array  | ✓        | Success criteria as flat array                                     |
+| `outcomes`         | array  | -        | Measurable metrics with targets and measurement methods (optional) |
+| `dependencies`     | array  | -        | Goal IDs that must complete first (optional)                       |
+| `status`           | enum   | -        | Manual override: cancelled \| archived (auto-derived otherwise)    |
 
 ### Plan Schema
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `goal` | string | ✓ | Goal file reference (without .md) |
-| `goal_number` | string | ✓ | Workspace number (e.g., "001") |
-| `updated` | date | ✓ | ISO 8601 timestamp |
-| `tasks` | array | ✓ | Task objects with id, title, status, notes, source |
+| Field         | Type   | Required | Description                                        |
+| ------------- | ------ | -------- | -------------------------------------------------- |
+| `goal`        | string | ✓        | Goal file reference (without .md)                  |
+| `goal_number` | string | ✓        | Workspace number (e.g., "001")                     |
+| `updated`     | date   | ✓        | ISO 8601 timestamp                                 |
+| `tasks`       | array  | ✓        | Task objects with id, title, status, notes, source |
 
 **Task object:** `{id: string, title: string, status: string, notes: string, source: string, created: string, updated: string}`
 
@@ -361,6 +376,7 @@ teamWERX supports unlimited concurrent goals, each with independent workflows. D
 **Goal identification:** Kebab-case filenames (e.g., `implement-new-login-page.md`)
 
 **Context management:**
+
 - `teamwerx use [goal-name]` - Set current working goal (stored in `.teamwerx/.current-goal`)
 - `teamwerx status --list [--status=<status>]` - List/filter all goals
 - `teamwerx status [goal-name]` - Show detailed goal status
@@ -368,6 +384,7 @@ teamWERX supports unlimited concurrent goals, each with independent workflows. D
 **Dependencies:** Add `dependencies` field in goal frontmatter to track prerequisite goals
 
 **Multi-Agent Coordination:**
+
 ```bash
 # Agent A (session 1)
 teamwerx use goal-a
@@ -454,6 +471,7 @@ teamwerx plan
 - Create branches for experimental goals
 
 Example:
+
 ```bash
 git add .teamwerx/
 git commit -m "[teamWERX] Add authentication goal"
@@ -490,11 +508,13 @@ git commit -m "[teamWERX] Add authentication goal"
 ## Error Handling
 
 Commands provide clear, actionable error messages that include:
+
 1. What went wrong
 2. How to fix it
 3. Relevant context (available options, next steps)
 
 **Common error categories:**
+
 - Prerequisites not met (git not initialized, teamWERX not initialized)
 - Resource not found (invalid goal/task/proposal ID)
 - State errors (no current goal set, no pending tasks)
@@ -576,6 +596,7 @@ npm run lint
 ### Test Coverage
 
 This project uses Jest for testing and maintains baseline code coverage thresholds:
+
 - Statements: 12%
 - Branches: 10%
 - Functions: 25%
@@ -590,6 +611,7 @@ MIT
 ## Contributing
 
 Contributions welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
+
 - Setting up your development environment
 - Running tests and linters
 - Code style and conventions

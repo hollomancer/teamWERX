@@ -13,27 +13,32 @@ Thank you for your interest in contributing to teamWERX! This document provides 
 ### Setup Development Environment
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/hollomancer/teamWERX.git
    cd teamWERX
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Make the CLI executable:
+
    ```bash
    chmod +x bin/teamwerx.js
    ```
 
 4. Test the CLI:
+
    ```bash
    node bin/teamwerx.js --help
    ```
 
 5. Run tests:
+
    ```bash
    npm test
    ```
@@ -99,7 +104,7 @@ teamWERX/
 #### Test Structure
 
 ```javascript
-describe('ModuleName', () => {
+describe("ModuleName", () => {
   beforeEach(() => {
     // Setup before each test
   });
@@ -108,8 +113,8 @@ describe('ModuleName', () => {
     // Cleanup after each test
   });
 
-  describe('functionName', () => {
-    test('should do something specific', () => {
+  describe("functionName", () => {
+    test("should do something specific", () => {
       // Test implementation
       expect(result).toBe(expected);
     });
@@ -130,10 +135,11 @@ Use the conventional commit format with `[teamWERX]` prefix:
 ### Adding a New Command
 
 1. Create a new file in `lib/commands/`:
+
    ```javascript
    // lib/commands/mycommand.js
-   const chalk = require('chalk');
-   const { getCurrentGoal } = require('../utils/file');
+   const chalk = require("chalk");
+   const { getCurrentGoal } = require("../utils/file");
 
    async function mycommand(args) {
      // Implementation
@@ -143,30 +149,33 @@ Use the conventional commit format with `[teamWERX]` prefix:
    ```
 
 2. Register the command in `bin/teamwerx.js`:
+
    ```javascript
-   const mycommand = require('../lib/commands/mycommand');
-   
+   const mycommand = require("../lib/commands/mycommand");
+
    program
-     .command('mycommand [args]')
-     .description('Description of my command')
+     .command("mycommand [args]")
+     .description("Description of my command")
      .action(mycommand);
    ```
 
 3. Update AGENTS.md if the command is for AI agents
 
 4. Write tests for the command:
+
    ```javascript
    // test/commands/mycommand.test.js
-   const mycommand = require('../../lib/commands/mycommand');
+   const mycommand = require("../../lib/commands/mycommand");
 
-   describe('MyCommand', () => {
-     test('should do something', async () => {
+   describe("MyCommand", () => {
+     test("should do something", async () => {
        // Test implementation
      });
    });
    ```
 
 5. Run tests to ensure they pass:
+
    ```bash
    npm test
    ```
@@ -229,6 +238,7 @@ git init
 
 1. Fork the repository
 2. Create a feature branch:
+
    ```bash
    git checkout -b feature/my-feature
    ```
@@ -238,11 +248,13 @@ git init
 4. Test your changes thoroughly
 
 5. Commit with descriptive messages:
+
    ```bash
    git commit -m "[teamWERX] Add feature X"
    ```
 
 6. Push to your fork:
+
    ```bash
    git push origin feature/my-feature
    ```

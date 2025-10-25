@@ -16,7 +16,7 @@ describe('Research Command', () => {
     // Create a test goal and set it as current
     await env.createGoal('test-goal', {
       title: 'Test Goal',
-      created: '2025-10-25'
+      created: '2025-10-25',
     });
     await env.setCurrentGoal('test-goal');
 
@@ -25,19 +25,30 @@ describe('Research Command', () => {
     // Check that research file was created
     const fs = require('fs').promises;
     const path = require('path');
-    const researchPath = path.join(env.workspacesDir, '001-test-goal', 'research.md');
-    const exists = await fs.access(researchPath).then(() => true).catch(() => false);
+    const researchPath = path.join(
+      env.workspacesDir,
+      '001-test-goal',
+      'research.md',
+    );
+    const exists = await fs
+      .access(researchPath)
+      .then(() => true)
+      .catch(() => false);
     expect(exists).toBe(true);
 
     // Check console output
-    expect(env.console.output.some(output => output.includes('Research report updated'))).toBe(true);
+    expect(
+      env.console.output.some((output) =>
+        output.includes('Research report updated'),
+      ),
+    ).toBe(true);
   });
 
   test('should generate research report for specified goal', async () => {
     // Create a test goal
     await env.createGoal('specific-goal', {
       title: 'Specific Goal',
-      created: '2025-10-25'
+      created: '2025-10-25',
     });
 
     await research('specific-goal');
@@ -45,8 +56,15 @@ describe('Research Command', () => {
     // Check that research file was created
     const fs = require('fs').promises;
     const path = require('path');
-    const researchPath = path.join(env.workspacesDir, '001-specific-goal', 'research.md');
-    const exists = await fs.access(researchPath).then(() => true).catch(() => false);
+    const researchPath = path.join(
+      env.workspacesDir,
+      '001-specific-goal',
+      'research.md',
+    );
+    const exists = await fs
+      .access(researchPath)
+      .then(() => true)
+      .catch(() => false);
     expect(exists).toBe(true);
   });
 
@@ -58,14 +76,16 @@ describe('Research Command', () => {
     }
 
     expect(env.exit.getExitCode()).toBe(1);
-    expect(env.console.errors.some(error => error.includes('No goal specified'))).toBe(true);
+    expect(
+      env.console.errors.some((error) => error.includes('No goal specified')),
+    ).toBe(true);
   });
 
   test('should update existing research report', async () => {
     // Create a test goal and set it as current
     await env.createGoal('test-goal', {
       title: 'Test Goal',
-      created: '2025-10-25'
+      created: '2025-10-25',
     });
     await env.setCurrentGoal('test-goal');
 
@@ -79,6 +99,10 @@ describe('Research Command', () => {
     await research();
 
     // Check that it still works (no errors)
-    expect(env.console.output.some(output => output.includes('Research report updated'))).toBe(true);
+    expect(
+      env.console.output.some((output) =>
+        output.includes('Research report updated'),
+      ),
+    ).toBe(true);
   });
 });
