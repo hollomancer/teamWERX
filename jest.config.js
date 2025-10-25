@@ -1,14 +1,14 @@
 module.exports = {
-  testEnvironment: 'node',
-  coverageDirectory: 'coverage',
+  testEnvironment: "node",
+  coverageDirectory: "coverage",
   collectCoverageFrom: [
-    'lib/**/*.js',
-    'bin/**/*.js',
-    '!lib/**/*.test.js',
-    '!**/node_modules/**',
+    "lib/**/*.js",
+    "bin/**/*.js",
+    "!lib/**/*.test.js",
+    "!**/node_modules/**",
   ],
-  coverageReporters: ['text', 'lcov', 'html'],
-  testMatch: ['**/test/**/*.test.js', '**/__tests__/**/*.js'],
+  coverageReporters: ["text", "lcov", "html"],
+  testMatch: ["**/test/**/*.test.js", "**/__tests__/**/*.js"],
   coverageThreshold: {
     global: {
       branches: 10,

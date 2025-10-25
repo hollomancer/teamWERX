@@ -4,26 +4,26 @@
  * Provides utilities for setting up test environments and mocking
  */
 
-const fs = require('fs').promises;
-const path = require('path');
-const os = require('os');
+const fs = require("fs").promises;
+const path = require("path");
+const os = require("os");
 
 /**
  * Create a temporary teamWERX workspace for testing
  * @param {string} prefix - Prefix for the temp directory name
  * @returns {Promise<Object>} Test workspace utilities
  */
-async function createTestWorkspace(prefix = 'teamwerx-test') {
+async function createTestWorkspace(prefix = "teamwerx-test") {
   const testDir = path.join(
     os.tmpdir(),
-    `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
   );
   await fs.mkdir(testDir, { recursive: true });
 
-  const teamwerxDir = path.join(testDir, '.teamwerx');
-  const goalsDir = path.join(teamwerxDir, 'goals');
-  const plansDir = path.join(teamwerxDir, 'plans');
-  const workspacesDir = path.join(teamwerxDir, 'workspaces');
+  const teamwerxDir = path.join(testDir, ".teamwerx");
+  const goalsDir = path.join(teamwerxDir, "goals");
+  const plansDir = path.join(teamwerxDir, "plans");
+  const workspacesDir = path.join(teamwerxDir, "workspaces");
 
   await fs.mkdir(goalsDir, { recursive: true });
   await fs.mkdir(plansDir, { recursive: true });
@@ -54,16 +54,16 @@ async function createTestWorkspace(prefix = 'teamwerx-test') {
      * @param {Object} data - Frontmatter data
      * @param {string} content - Markdown content
      */
-    createGoal: async (name, data = {}, content = '') => {
+    createGoal: async (name, data = {}, content = "") => {
       const frontmatter = [
-        '---',
+        "---",
         ...Object.entries(data).map(
-          ([key, value]) => `${key}: ${JSON.stringify(value)}`,
+          ([key, value]) => `${key}: ${JSON.stringify(value)}`
         ),
-        '---',
-        '',
+        "---",
+        "",
         content,
-      ].join('\n');
+      ].join("\n");
 
       await fs.writeFile(path.join(goalsDir, `${name}.md`), frontmatter);
     },
@@ -74,16 +74,16 @@ async function createTestWorkspace(prefix = 'teamwerx-test') {
      * @param {Object} data - Frontmatter data
      * @param {string} content - Markdown content
      */
-    createPlan: async (name, data = {}, content = '') => {
+    createPlan: async (name, data = {}, content = "") => {
       const frontmatter = [
-        '---',
+        "---",
         ...Object.entries(data).map(
-          ([key, value]) => `${key}: ${JSON.stringify(value)}`,
+          ([key, value]) => `${key}: ${JSON.stringify(value)}`
         ),
-        '---',
-        '',
+        "---",
+        "",
         content,
-      ].join('\n');
+      ].join("\n");
 
       await fs.writeFile(path.join(plansDir, `${name}.md`), frontmatter);
     },
@@ -93,7 +93,7 @@ async function createTestWorkspace(prefix = 'teamwerx-test') {
      * @param {string} goalName - Goal name to set as current
      */
     setCurrentGoal: async (goalName) => {
-      await fs.writeFile(path.join(teamwerxDir, '.current-goal'), goalName);
+      await fs.writeFile(path.join(teamwerxDir, ".current-goal"), goalName);
     },
 
     /**
@@ -123,9 +123,9 @@ function mockConsole() {
   const errors = [];
   const warnings = [];
 
-  console.log = (...args) => output.push(args.join(' '));
-  console.error = (...args) => errors.push(args.join(' '));
-  console.warn = (...args) => warnings.push(args.join(' '));
+  console.log = (...args) => output.push(args.join(" "));
+  console.error = (...args) => errors.push(args.join(" "));
+  console.warn = (...args) => warnings.push(args.join(" "));
 
   return {
     output,
@@ -162,7 +162,7 @@ function mockProcessExit() {
 
   process.exit = (code) => {
     exitCode = code;
-    throw new Error('process.exit called');
+    throw new Error("process.exit called");
   };
 
   return {
@@ -182,7 +182,7 @@ function mockProcessExit() {
  * @param {string} prefix - Prefix for temp directory
  * @returns {Promise<Object>} Complete test environment
  */
-async function createTestEnvironment(prefix = 'teamwerx-test') {
+async function createTestEnvironment(prefix = "teamwerx-test") {
   const workspace = await createTestWorkspace(prefix);
   const consoleMock = mockConsole();
   const exitMock = mockProcessExit();

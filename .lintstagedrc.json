@@ -1,13 +1,5 @@
 {
-  "*.{js,json,md}": [
-    "prettier --write"
-  ],
-  "lib/**/*.js": [
-    "eslint --fix",
-    "prettier --write"
-  ],
-  "bin/**/*.js": [
-    "eslint --fix",
-    "prettier --write"
-  ]
+  "*.{js,json,md}": ["prettier --write"],
+  "lib/**/*.js": ["eslint --fix", "prettier --write"],
+  "bin/**/*.js": ["eslint --fix", "prettier --write"]
 }
