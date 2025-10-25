@@ -30,6 +30,11 @@ const planCommand = require('../lib/commands/plan');
 const executeCommand = require('../lib/commands/execute');
 const proposeCommand = require('../lib/commands/propose');
 const archiveCommand = require('../lib/commands/archive');
+const collectCommand = require('../lib/commands/collect');
+const charterCommand = require('../lib/commands/charter');
+const correctCommand = require('../lib/commands/correct');
+const implementCommand = require('../lib/commands/implement');
+const inspireCommand = require('../lib/commands/inspire');
 
 // Configure CLI
 program
@@ -57,6 +62,8 @@ program
 program
   .command('status [goal-name]')
   .description('Show detailed status of a specific goal or all goals')
+  .option('--context', 'Show project context with tech stack and directories')
+  .option('--summary', 'Show summary with discussion/implementation records')
   .action(statusCommand);
 
 program
@@ -67,25 +74,29 @@ program
 program
   .command('research [goal-name]')
   .description('Analyze the codebase and generate a research report')
-  .option('--note <text>', 'Add supplemental notes for the research session', collectValues, [])
-  .option('--file <path>', 'Attach a supporting file (repeatable)', collectValues, [])
-  .option('--url <url>', 'Reference a URL for additional context', collectValues, [])
+  .option('--goal <goal>', 'Specify the goal slug')
   .action(researchCommand);
 
 program
   .command('discuss <message>')
   .description('Continue structured discussion about implementation strategy')
+  .option('--goal <goal>', 'Specify the goal slug')
   .action(discussCommand);
 
 program
   .command('dry-run')
   .description('Simulate the implementation plan to identify potential issues')
+  .option('--goal <goal>', 'Specify the goal slug')
+  .option('--notes <text>', 'Dry-run notes')
   .action(dryRunCommand);
 
 program
-  .command('plan [goal-name]')
-  .description('Generate a task list based on research and discussion')
-  .action(planCommand);
+  .command('plan [considerations]')
+  .description('Generate or update a task plan for a goal')
+  .option('--goal <goal>', 'Specify the goal slug')
+  .option('--task <task>', 'Add a task (repeatable)', collectValues, [])
+  .option('--interactive', 'Interactively add tasks via prompts')
+  .action((considerations, cmdOptions) => planCommand(considerations, cmdOptions));
 
 program
   .command('execute [goal-name]')
@@ -102,6 +113,37 @@ program
   .description('Archive a completed goal and move its artifacts into .teamwerx/archive/')
   .option('--yes', 'Skip confirmation prompts')
   .action(archiveCommand);
+
+program
+  .command('collect')
+  .description('Collect staged manual changes into plan and implementation logs')
+  .option('--goal <goal>', 'Specify the goal slug')
+  .option('--title <title>', 'Override the generated task title')
+  .action(collectCommand);
+
+program
+  .command('charter')
+  .description('Generate or update the project charter')
+  .action(charterCommand);
+
+program
+  .command('correct <issue>')
+  .description('Record an issue correction (discussion + plan + implementation)')
+  .option('--goal <goal>', 'Specify the goal slug')
+  .action(correctCommand);
+
+program
+  .command('implement')
+  .description('Complete up to five pending tasks and create implementation logs')
+  .option('--goal <goal>', 'Specify the goal slug')
+  .option('--notes <text>', 'Notes to include on each completed task')
+  .action(implementCommand);
+
+program
+  .command('inspire')
+  .description('Add inspiration / contention points to the discussion log')
+  .option('--goal <goal>', 'Specify the goal slug')
+  .action(inspireCommand);
 
 // Error handling
 program.exitOverride();

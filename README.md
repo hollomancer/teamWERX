@@ -71,6 +71,16 @@ These commands are designed to be used with AI agents:
 - `teamwerx plan [goal-name]` - Generate implementation plan while preserving historical context in the plan file
 - `teamwerx execute [goal-name]` - Execute the plan
 
+### Workspace Management Commands
+
+- Each goal automatically gets a numbered workspace with structured artifacts. These commands help manage workspace contents:
+
+- `teamwerx collect [--goal <goal>]` – Capture staged manual changes into the plan and implementation logs
+- `teamwerx charter` – Generate or update `.teamwerx/goals/charter.md` based on the detected tech stack
+- `teamwerx correct <issue>` – Log an issue fix (discussion + completed task + implementation record)
+- `teamwerx implement [--goal <goal>]` – Batch-complete up to five pending tasks and create matching implementation records
+- `teamwerx inspire [--goal <goal>]` – Analyze pending work and add discussion entry with decision points
+
 ### Change Management
 
 - `teamwerx propose <description>` - Propose a change; review outcomes manually by updating the proposal file’s `status`/`rationale`
@@ -84,18 +94,26 @@ After initialization, teamWERX creates the following structure:
 project-root/
 ├── AGENTS.md              # Configuration + AI agent instructions
 └── .teamwerx/
-    ├── goals/             # Goal definitions
-    ├── research/          # Discussion logs + timestamped research sessions (with inputs and reports)
-    ├── plans/             # Implementation plans
-    ├── proposals/         # Change proposals
-    ├── archive/           # Archived artifacts
-    │   ├── goals/
-    │   ├── plans/
-    │   ├── research/
-    │   └── proposals/
-    └── .current-goal      # Current working goal
+    ├── goals/
+    │   ├── goal-name.md             # Goal definition file
+    │   ├── 001-goal-name/           # Numbered workspace
+    │   │   ├── discuss.md           # Discussion log (D01, D02, ...)
+    │   │   ├── plan.md              # Task plan (T01, T02, ...)
+    │   │   ├── research.md          # Research report
+    │   │   └── implementation/      # Implementation records (T01.md, T02.md, ...)
+    │   ├── 002-another-goal/
+    │   ├── charter.md               # Project charter
+    │   └── registry.json            # Workspace numbering registry
+    ├── proposals/                   # Change proposals
+    ├── archive/                     # Archived goals and workspaces
+    └── .current-goal                # Current working goal
 ```
-Each `research/<artifact>/` directory keeps a rolling `discussion.md` plus one `session-<timestamp>/` subdirectory per research command invocation so older analyses remain intact.
+
+Each goal has two parts:
+1. **Goal file** (`goal-name.md`) - Metadata, success criteria, and notes
+2. **Numbered workspace** (`00X-goal-name/`) - Discussion, plan, research, and implementation records
+
+Workspaces use deterministic numbering: `registry.json` tracks the next goal ID (e.g., `001`). Discussion entries use `D01`, `D02`, ..., tasks use `T01`, `T02`, ..., and implementation records match task IDs.
 
 The CLI source includes reusable templates (e.g., AGENTS.md) under `assets/templates/`, mirroring the template-driven architecture used in OpenSpec.
 
@@ -131,8 +149,9 @@ Goals progress through the following states:
 3. **Clear success criteria**: Define measurable outcomes for each goal
 
 4. **Regular status reviews**: Use `teamwerx status` to review progress
-5. **Preserve history**: Treat AI-generated artifacts as append-only—create new research sessions and append to discussions instead of overwriting existing context
+5. **Preserve history**: Treat AI-generated artifacts as append-only—append to discussions and plans instead of overwriting existing context
 6. **Archive promptly**: Run `teamwerx archive <goal-name>` once a goal is deployed so active folders only contain in-progress work
+7. **Keep workspace in sync**: Use workspace commands like `collect`, `correct`, and `implement` to keep `plan.md`, `discuss.md`, `research.md`, and `implementation/` synchronized with manual work
 
 ## Configuration
 

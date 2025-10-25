@@ -9,45 +9,70 @@ teamwerx:
 
 AI agents: Use teamWERX commands to coordinate goal-based development with the developer.
 
+## Workspace Architecture
+
+All goals have a numbered workspace under `.teamwerx/goals/<number>-<slug>/` containing:
+- `discuss.md` - Discussion log with numbered entries (D01, D02, ...)
+- `plan.md` - Task plan with numbered tasks (T01, T02, ...)
+- `research.md` - Research report with tech stack and project insights
+- `implementation/` - Implementation records (T01.md, T02.md, ...)
+
 ## Commands
 
-### `/teamwerx.goal [description]`
-Create a new goal. Prompt for success criteria. Save to `.teamwerx/goals/[kebab-case-title].md` with YAML frontmatter (title, status: draft, created, success_criteria).
+### `teamwerx goal [description]`
+Create a new goal with automatic workspace setup. Prompts for success criteria. Saves goal file to `.teamwerx/goals/[kebab-case-title].md` and creates numbered workspace `.teamwerx/goals/00X-[slug]/` with discussion, plan, and research templates.
 
-### `/teamwerx.research [goal-name] [--note <text>] [--file <path>] [--url <url>]`
-**Session-based analysis.** Analyze the current goal (or supplied artifact such as a plan/proposal), search the web when allowed, and incorporate any supplemental context passed through `--note`, `--file`, or `--url`. Each invocation creates `.teamwerx/research/[artifact]/session-<timestamp>/`; store `report.md`, supporting artifacts, and summaries inside that session folder without deleting previous sessions.
+### `teamwerx research [goal-name] [--goal <goal>]`
+Analyze the codebase and generate/update research report. Detects technology stack, languages, and directory structure. Updates `research.md` in goal workspace.
 
-### `/teamwerx.discuss [message]`
-**Iterative conversation.** Respond to developer messages about implementation approach. Append timestamped entries to `.teamwerx/research/[artifact]/discussion.md` (never overwrite existing discussion). Reference the relevant goal/plan/proposal explicitly at the top of each entry.
+### `teamwerx discuss <message> [--goal <goal>]`
+Append a numbered discussion entry (D01, D02, ...) with timestamp and content to the goal's discussion log. Non-destructive; preserves all prior entries.
 
-### `/teamwerx.dry-run`
-Simulate current plan to identify potential issues. Provide feedback before execution.
+### `teamwerx dry-run [--goal <goal>] [--notes <text>]`
+Record a dry-run assessment in the discussion log, outlining expected file changes, risks, and dependencies.
 
-### `/teamwerx.plan`
-Generate task list from accumulated research/discussion. Update `.teamwerx/plans/[goal-name].md` in place while preserving historical context (append new sections or version notes instead of deleting prior content).
+### `teamwerx plan [considerations] [--goal <goal>] [--task <task>] [--interactive]`
+Add numbered tasks (T01, T02, ...) to the goal plan. Use `--task` flag for individual tasks, `--interactive` for prompted entry, or no flags for AI-driven planning mode.
 
-### `/teamwerx.execute [task-id]`
-Execute specific task or next pending task from plan. Flow:
-1. Read plan, identify task
+### `teamwerx execute [goal-name]`
+Execute tasks from the plan:
+1. Read plan, identify next pending task
 2. Implement task (create/modify code files)
 3. Update task status to completed in plan file
 4. Prompt developer to commit
-If no task-id: execute next pending task.
 
-### `/teamwerx.propose [description]`
-Propose change to goal/plan. Save to `.teamwerx/proposals/[goal-name]/[proposal-id].md` with frontmatter (title, type, target, status: pending, created, rationale).
+### `teamwerx collect [--goal <goal>] [--title <title>]`
+Collect staged git changes. Adds a completed plan task and creates `implementation/TXX.md` with diff summary and details.
 
-### `/teamwerx.archive [goal-name] [--yes]`
-Archive a completed goal (defaults to the current goal). Moves the goal, plan, research, and proposal artifacts into `.teamwerx/archive/`. Use `--yes` to skip confirmation.
+### `teamwerx charter`
+Generate/refresh `.teamwerx/goals/charter.md` based on detected technology stack and governance constraints.
 
-### `/teamwerx.list [--status=<status>]`
+### `teamwerx correct <issue> [--goal <goal>]`
+Log an issue fix: adds a discussion entry, creates a completed task, and writes an implementation record describing the resolution.
+
+### `teamwerx implement [--goal <goal>] [--notes <text>]`
+Batch-complete up to five pending tasks and create implementation records for each.
+
+### `teamwerx inspire [--goal <goal>]`
+Analyze pending work and add a discussion entry highlighting decision points or follow-up questions.
+
+### `teamwerx list [--status <status>]`
 List all goals. Filter by status if specified. Display title, status, created date.
 
-### `/teamwerx.status [goal-name]`
-Show detailed status of goal (or all goals if omitted). Include plan status and recent activity.
+### `teamwerx status [goal-name] [--context] [--summary]`
+Show detailed status of goal (or all goals if omitted).
+- Default: Goal status, success criteria, plan info
+- `--context`: Tech stack, directories, artifacts
+- `--summary`: Discussion/implementation counts, recent records
 
-### `/teamwerx.use [goal-name]`
+### `teamwerx use <goal-name>`
 Set current working goal context. Store in `.teamwerx/.current-goal`.
+
+### `teamwerx propose <description>`
+Propose change to goal/plan. Save to `.teamwerx/proposals/[goal-name]/[proposal-id].md` with frontmatter.
+
+### `teamwerx archive [goal-name] [--yes]`
+Archive a completed goal. Moves goal file, workspace, and artifacts to `.teamwerx/archive/`. Use `--yes` to skip confirmation.
 
 ## Conventions
 - Default goal status: `draft`
@@ -55,4 +80,5 @@ Set current working goal context. Store in `.teamwerx/.current-goal`.
 - File naming: kebab-case
 - Task statuses: pending | in-progress | completed
 - Goal statuses: draft | open | in-progress | blocked | completed | cancelled
-- All commands are **non-destructive**: append to logs, create new session folders, or add addenda instead of overwriting artifacts. Use git history for changes that must replace existing content.
+- All commands are **non-destructive**: append to logs, create new entries, or add addenda instead of overwriting artifacts. Use git history for changes that must replace existing content.
+- Workspace numbering: each goal gets a three-digit ID (`001`, `002`, ...), discussions use `Dxx`, tasks use `Txx`. Preserve numbering when editing files manually.
