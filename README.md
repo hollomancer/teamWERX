@@ -522,13 +522,45 @@ The CLI source includes reusable templates (e.g., `AGENTS.md`) under `assets/tem
 - Node.js >= 14.0.0
 - Git (must be initialized in your project)
 
+## Development
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run linter
+npm run lint
+```
+
+### Test Coverage
+
+This project uses Jest for testing and maintains baseline code coverage thresholds:
+- Statements: 12%
+- Branches: 10%
+- Functions: 25%
+- Lines: 12%
+
+Coverage reports are generated in the `coverage/` directory.
+
 ## License
 
 MIT
 
 ## Contributing
 
-Contributions welcome! Please read this README for detailed information about the architecture and design.
+Contributions welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
+- Setting up your development environment
+- Running tests and linters
+- Code style and conventions
+- Submitting pull requests
 
 ## Support
 

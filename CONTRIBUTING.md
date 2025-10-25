@@ -33,6 +33,16 @@ Thank you for your interest in contributing to teamWERX! This document provides 
    node bin/teamwerx.js --help
    ```
 
+5. Run tests:
+   ```bash
+   npm test
+   ```
+
+6. Run tests with coverage:
+   ```bash
+   npm run test:coverage
+   ```
+
 ### Project Structure
 
 ```
@@ -43,14 +53,25 @@ teamWERX/
 │   ├── commands/            # Command implementations
 │   │   ├── init.js
 │   │   ├── goal.js
-│   │   ├── list.js
+│   │   ├── use.js
+│   │   └── ...
+│   ├── core/                # Core business logic
+│   │   ├── plan-manager.js
+│   │   ├── discussion-manager.js
 │   │   └── ...
 │   └── utils/               # Utility modules
 │       ├── file.js          # File system utilities
-│       └── git.js           # Git utilities
+│       ├── git.js           # Git utilities
+│       └── goal-status.js   # Goal status utilities
+├── test/
+│   ├── commands/            # Command tests
+│   ├── core/                # Core module tests
+│   └── utils/               # Utility tests
 ├── package.json
+├── jest.config.js
+├── .eslintrc.json
 ├── README.md
-└── teamWERX_specification.md
+└── CONTRIBUTING.md
 ```
 
 ## Development Guidelines
@@ -63,6 +84,38 @@ teamWERX/
 - Keep functions focused and small
 - Add JSDoc comments for functions
 - Use async/await for asynchronous code
+- Run linter before committing: `npm run lint`
+- Fix linting issues: `npm run lint:fix`
+
+### Testing
+
+- Write tests for all new code
+- Ensure all tests pass before submitting: `npm test`
+- Maintain or improve code coverage: `npm run test:coverage`
+- Tests are written using Jest
+- Place tests in the `test/` directory mirroring the structure of `lib/`
+- Test files should end with `.test.js`
+
+#### Test Structure
+
+```javascript
+describe('ModuleName', () => {
+  beforeEach(() => {
+    // Setup before each test
+  });
+
+  afterEach(() => {
+    // Cleanup after each test
+  });
+
+  describe('functionName', () => {
+    test('should do something specific', () => {
+      // Test implementation
+      expect(result).toBe(expected);
+    });
+  });
+});
+```
 
 ### Commit Messages
 
@@ -101,9 +154,24 @@ Use the conventional commit format with `[teamWERX]` prefix:
 
 3. Update AGENTS.md if the command is for AI agents
 
-4. Add tests (when testing framework is added)
+4. Write tests for the command:
+   ```javascript
+   // test/commands/mycommand.test.js
+   const mycommand = require('../../lib/commands/mycommand');
 
-5. Update README.md with command documentation
+   describe('MyCommand', () => {
+     test('should do something', async () => {
+       // Test implementation
+     });
+   });
+   ```
+
+5. Run tests to ensure they pass:
+   ```bash
+   npm test
+   ```
+
+6. Update README.md with command documentation
 
 ### Adding Utilities
 
@@ -111,6 +179,29 @@ Use the conventional commit format with `[teamWERX]` prefix:
 2. Export functions using `module.exports`
 3. Add JSDoc comments
 4. Handle errors gracefully
+5. Write comprehensive tests in `test/utils/`
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode (automatically re-run on changes)
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Run specific test file
+npm test -- test/utils/file.test.js
+
+# Run linter
+npm run lint
+
+# Fix linting issues automatically
+npm run lint:fix
+```
 
 ### Testing Commands Locally
 
@@ -166,11 +257,13 @@ git init
 
 ### High Priority
 
-- [ ] Add automated tests (Jest or Mocha)
+- [x] Add automated tests (Jest)
+- [x] Add code coverage reporting
 - [ ] Implement validation for AI-generated artifacts
 - [ ] Add state transition validation
 - [ ] Improve error handling and recovery
 - [ ] Add more detailed examples
+- [ ] Increase test coverage above 50%
 
 ### Medium Priority
 
