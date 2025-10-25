@@ -56,6 +56,7 @@ program
   .option('--status <status>', 'Filter by status (use with --list)')
   .option('--context', 'Show project context with tech stack and directories')
   .option('--summary', 'Show summary with discussion/implementation records')
+  .option('--json', 'Output in JSON format')
   .action(statusCommand);
 
 program
