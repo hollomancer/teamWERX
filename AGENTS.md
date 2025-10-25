@@ -4,6 +4,7 @@ teamwerx:
   initialized: "2025-10-25"
 ---
 
+
 # teamWERX Agent Instructions
 
 AI agents: Use teamWERX commands to coordinate goal-based development with the developer.
