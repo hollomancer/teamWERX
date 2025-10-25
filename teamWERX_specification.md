@@ -2,14 +2,15 @@
 
 ## Introduction
 
-teamWERX is a development framework that aligns software development teams and their AI coding assistants. It provides a structured workflow to bring clarity, predictability, and efficiency to the software development lifecycle.
+teamWERX is a development framework for individual developers working with multiple AI agents. It provides a structured workflow to bring clarity, predictability, and efficiency to the software development lifecycle by coordinating the developer and their AI assistants around shared goals and plans.
 
 ## Core Philosophy
 
 *   **Goal-Oriented:** Development starts with a clear definition of high-level goals and desired outcomes.
-*   **Specification-Driven:** Goals are translated into concrete specifications through a process of research and discussion.
-*   **AI-Assisted:** The framework is designed to be used with AI coding assistants, providing a structured interface for collaboration.
+*   **Specification-Driven:** Goals are translated into concrete specifications through a process of research and discussion with AI agents.
+*   **Multi-Agent Coordination:** The framework orchestrates multiple AI agents working on different aspects of a project, all guided by a single developer.
 *   **Traceability:** All decisions, discussions, and plans are documented and version-controlled, providing a clear audit trail.
+*   **Token-Efficient:** Agent instructions are designed to minimize token usage while providing complete context.
 
 ## Technical Architecture
 
@@ -17,15 +18,15 @@ teamWERX will be built as a command-line interface (CLI) tool using Node.js. It 
 
 ## Workflow
 
-The teamWERX workflow is divided into four main phases. Multiple goals can progress through these phases concurrently, allowing teams to work on different features or projects in parallel.
+The teamWERX workflow is divided into four main phases. Multiple goals can progress through these phases concurrently, with different AI agents potentially working on different goals under the developer's direction.
 
-1.  **Goal Setting:** The team defines the high-level goals for the project or feature.
-2.  **Research and Discussion:** The team and their AI assistants research the existing codebase, discuss potential implementation strategies, and refine the requirements.
+1.  **Goal Setting:** The developer defines the high-level goals for the project or feature.
+2.  **Research and Discussion:** The developer and AI agents research the existing codebase, discuss potential implementation strategies, and refine the requirements.
 3.  **Planning:** Based on the research and discussion, a detailed implementation plan is created.
-4.  **Execution:** The plan is executed by the development team and their AI assistants.
-5.  **Change Management:** The team can propose and track changes to goals and plans throughout the development process.
+4.  **Execution:** The plan is executed by AI agents under the developer's guidance.
+5.  **Change Management:** Changes to goals and plans can be proposed and tracked throughout the development process.
 
-**Note:** These phases are per-goal, meaning different goals can be in different phases simultaneously. For example, one goal might be in the Execution phase while another is still in Research and Discussion.
+**Note:** These phases are per-goal, meaning different goals can be in different phases simultaneously, with different AI agents working on different goals.
 
 ### 1. Goal Setting
 
@@ -92,7 +93,7 @@ This phase is focused on managing changes to goals and plans.
 
 ### Goal Management
 
-*   `/teamwerx.list [--status=<status>] [--owner=<owner>]`: Lists all goals in the project with optional filtering by status or owner.
+*   `/teamwerx.list [--status=<status>]`: Lists all goals in the project with optional filtering by status.
 *   `/teamwerx.status [goal-name]`: Shows detailed status of a specific goal, or all goals if no name is provided.
 *   `/teamwerx.use [goal-name]`: Sets the current working goal context for subsequent commands.
 
@@ -168,34 +169,25 @@ The `.teamwerx` directory is created in the root of the project to store all tea
 
 ### Configuration
 
-teamWERX configuration is stored in the `AGENTS.md` file at the project root. This file serves both as documentation for AI agents and as the configuration source for teamWERX behavior. By consolidating configuration into a human-readable markdown file, it ensures that team members and AI agents have a single source of truth.
+teamWERX configuration is stored in the `AGENTS.md` file at the project root. This file serves both as documentation for AI agents and as the configuration source for teamWERX behavior. By consolidating configuration into a human-readable markdown file, it ensures that the developer and all AI agents have a single source of truth.
 
 **Location**: `AGENTS.md` (project root)
 
-The configuration is defined using YAML frontmatter at the top of the AGENTS.md file:
+The configuration is defined using minimal YAML frontmatter at the top of the AGENTS.md file:
 
 ```yaml
 ---
 teamwerx:
   version: "1.0.0"
-  projectName: "My Project"
-  initialized: "2025-10-25T12:00:00Z"
-  defaultGoalStatus: "draft"
-  git:
-    enabled: true
-    autoCommit: false
-    commitPrefix: "[teamWERX]"
+  initialized: "2025-10-25"
 ---
 ```
 
 **Configuration Fields:**
 *   `version`: teamWERX specification version
-*   `projectName`: Human-readable name for the project
-*   `initialized`: ISO 8601 timestamp of when teamWERX was initialized
-*   `defaultGoalStatus`: Default status for newly created goals (typically "draft")
-*   `git.enabled`: Whether git integration is enabled (always true)
-*   `git.autoCommit`: Whether to automatically commit changes (always false)
-*   `git.commitPrefix`: Prefix for teamWERX-related commit messages
+*   `initialized`: ISO 8601 date when teamWERX was initialized
+
+**Note on Token Efficiency:** The configuration is intentionally minimal because AGENTS.md is read by AI agents with every command execution. Additional settings are defined as conventions in the specification rather than configuration (e.g., default goal status is always "draft", git is always enabled, commits are always manual, commit prefix is always "[teamWERX]").
 
 ## Goals vs. Plans
 
@@ -319,14 +311,14 @@ Since all artifacts are tracked in git:
 
 ## Managing Concurrent Goals
 
-teamWERX is designed to support multiple goals being worked on simultaneously. This enables teams to manage complex projects with parallel workstreams and multiple priorities.
+teamWERX is designed to support multiple goals being worked on simultaneously. This enables a single developer to coordinate multiple AI agents working on different aspects of a project in parallel.
 
 ### Multiple Goals Support
 
 *   **Unlimited concurrent goals**: There is no limit to the number of goals that can exist in a project
 *   **Independent workflows**: Each goal has its own research, discussion, plans, and proposals
-*   **Parallel development**: Different team members can work on different goals simultaneously
-*   **Cross-goal visibility**: All goals are visible to all team members
+*   **Parallel agent coordination**: Different AI agents can work on different goals simultaneously under the developer's direction
+*   **Unified visibility**: All goals and their progress are visible in one place
 
 ### Goal Identification
 
@@ -340,10 +332,10 @@ Goals are identified by their filename in the `.teamwerx/goals/` directory:
 
 To help manage multiple goals, teamWERX provides commands to list and filter goals:
 
-*   `/teamwerx.list`: Lists all goals in the project
-    *   Displays: title, status, owner, created date
-    *   Sortable by: status, created date, owner
-    *   Filterable by: status, owner
+*   `/teamwerx.list [--status=<status>]`: Lists all goals in the project
+    *   Displays: title, status, created date
+    *   Sortable by: status, created date
+    *   Filterable by: status
 
 *   `/teamwerx.status [goal-name]`: Shows detailed status of a specific goal or all goals if no name is provided
     *   Displays: full goal details, current plan status, recent activity
@@ -352,14 +344,14 @@ To help manage multiple goals, teamWERX provides commands to list and filter goa
 **Example output:**
 ```
 Active Goals:
-┌─────────────────────────────┬──────────────┬──────────┬────────────┐
-│ Title                       │ Status       │ Owner    │ Created    │
-├─────────────────────────────┼──────────────┼──────────┼────────────┤
-│ Implement new login page    │ in-progress  │ alice    │ 2025-10-15 │
-│ Add payment integration     │ blocked      │ bob      │ 2025-10-18 │
-│ Refactor database layer     │ open         │ charlie  │ 2025-10-20 │
-│ Update user documentation   │ draft        │ diana    │ 2025-10-22 │
-└─────────────────────────────┴──────────────┴──────────┴────────────┘
+┌─────────────────────────────┬──────────────┬────────────┐
+│ Title                       │ Status       │ Created    │
+├─────────────────────────────┼──────────────┼────────────┤
+│ Implement new login page    │ in-progress  │ 2025-10-15 │
+│ Add payment integration     │ blocked      │ 2025-10-18 │
+│ Refactor database layer     │ open         │ 2025-10-20 │
+│ Update user documentation   │ draft        │ 2025-10-22 │
+└─────────────────────────────┴──────────────┴────────────┘
 ```
 
 ### Working Context
@@ -379,17 +371,19 @@ When working with multiple goals, teamWERX uses the following context resolution
 
 ### Multi-Goal Workflows
 
-**Scenario 1: Team with parallel features**
+**Scenario 1: Developer coordinating multiple AI agents on parallel features**
 ```bash
-# Alice works on authentication
+# Developer sets up authentication goal for Agent A
 /teamwerx.use implement-auth
 /teamwerx.research
 /teamwerx.plan
 
-# Bob works on payments (simultaneously)
+# Developer switches context to set up payments for Agent B
 /teamwerx.use add-payment-integration
 /teamwerx.research
 /teamwerx.plan
+
+# Agents work in parallel on their respective goals
 ```
 
 **Scenario 2: Dependent goals**
@@ -403,25 +397,22 @@ dependencies:
 ---
 ```
 
-**Scenario 3: Bulk status review**
+**Scenario 3: Status review**
 ```bash
 # View all goals at once
 /teamwerx.list
 
 # Filter to see only blocked items
 /teamwerx.list --status=blocked
-
-# See goals by specific owner
-/teamwerx.list --owner=alice
 ```
 
 ### Best Practices for Multiple Goals
 
-*   **Use clear, distinctive names**: Avoid similar goal names that could cause confusion
+*   **Use clear, distinctive names**: Avoid similar goal names that could cause confusion between agents
 *   **Track dependencies**: Document when goals depend on each other
 *   **Regular status reviews**: Periodically review all goals using `/teamwerx.list`
 *   **Archive completed goals**: Move completed goals to a `.teamwerx/archive/` directory
-*   **Limit active work**: While you can have many goals, limit how many are in `in-progress` state simultaneously
+*   **Limit active work**: While you can have many goals, limit how many are `in-progress` to maintain focus
 
 ## Proposal Workflow
 
@@ -484,13 +475,11 @@ To make the artifacts more machine-readable and to ensure consistency, the markd
 ```yaml
 ---
 title: Implement a new login page
-status: open  # draft, open, in-progress, blocked, completed, or cancelled
-owner: conradhollomon
+status: open
 created: 2025-10-25
-updated: 2025-10-25
 success_criteria:
-  - The user can log in with their email and password.
-  - The user is redirected to the dashboard after a successful login.
+  - User can log in with email and password
+  - User redirected to dashboard after successful login
 ---
 
 # Goal: Implement a new login page
@@ -500,34 +489,38 @@ success_criteria:
 
 **Field Descriptions:**
 *   `title`: Brief, descriptive name for the goal
-*   `status`: Current state (see Goal State Management section for valid states)
-*   `owner`: Primary person responsible for the goal
-*   `created`: ISO 8601 timestamp when the goal was created
-*   `updated`: ISO 8601 timestamp of the last update
+*   `status`: Current state (draft | open | in-progress | blocked | completed | cancelled)
+*   `created`: ISO 8601 date when the goal was created
 *   `success_criteria`: List of measurable outcomes that define success
+
+**Note:** Owner and updated fields are omitted since this is a single-developer tool. Git commit history provides the audit trail.
 
 ### Plan Schema
 
 ```yaml
 ---
-title: Plan for implementing a new login page
 goal: implement-a-new-login-page
 status: in-progress
 tasks:
   - id: 1
-    description: Create the login form component.
-    status: to-do
-    assignee: conradhollomon
+    description: Create the login form component
+    status: pending
   - id: 2
-    description: Implement the authentication logic.
-    status: to-do
-    assignee: conradhollomon
+    description: Implement the authentication logic
+    status: pending
 ---
 
 # Plan: Implement a new login page
 
 ...
 ```
+
+**Field Descriptions:**
+*   `goal`: Reference to the goal file (without .md extension)
+*   `status`: Current plan status (pending | in-progress | completed)
+*   `tasks`: List of tasks with id, description, and status (pending | in-progress | completed)
+
+**Note:** Title and assignee fields are omitted. The plan title is derived from the goal. All tasks are for the single developer, potentially executed by different AI agents.
 
 ## Extensibility
 
