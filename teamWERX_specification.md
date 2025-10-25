@@ -95,6 +95,39 @@ The teamWERX workflow is divided into four main phases. Multiple goals can progr
 
 **Note:** These phases are per-goal, meaning different goals can be in different phases simultaneously, with different AI agents working on different goals.
 
+### Workflow Visualization
+
+The following diagram shows the complete lifecycle of a goal in teamWERX:
+
+```mermaid
+graph TD
+    A[Developer creates goal] -->|/teamwerx.goal| B[Goal: draft]
+    B -->|/teamwerx.research| C[AI analyzes codebase]
+    C --> D[Research report created]
+    D -->|/teamwerx.discuss| E[Iterative discussion]
+    E -->|Multiple rounds| E
+    E -->|/teamwerx.plan| F[Goal: open, Plan created]
+    F -->|/teamwerx.execute| G[Goal: in-progress]
+    G -->|Execute tasks| H{All tasks done?}
+    H -->|No| G
+    H -->|Yes| I[Goal: completed]
+    G -->|Blocked?| J[Goal: blocked]
+    J -->|Issue resolved| G
+
+    style B fill:#f9f,stroke:#333
+    style F fill:#bbf,stroke:#333
+    style G fill:#fb9,stroke:#333
+    style I fill:#9f9,stroke:#333
+    style J fill:#f66,stroke:#333
+```
+
+**Key Points:**
+*   Goals start in `draft` state and progress through research and planning
+*   The discussion phase is iterative (multiple rounds possible)
+*   Execution moves the goal to `in-progress`
+*   Tasks are executed one-by-one until all complete
+*   Goals can be blocked and later unblocked
+
 ### 1. Goal Setting
 
 This phase is focused on defining the "why" and "what" of the project.
@@ -201,9 +234,49 @@ This phase is focused on managing changes to goals and plans.
 ### Change Management
 
 *   `/teamwerx.propose [description]`: Propose a change to a goal or plan. The description is a string that describes the proposed change.
-*   `/teamwerx.delta [goal/plan] [version]`: View the changes between different versions of a goal or plan. The goal/plan is the name of the goal or plan, and the version is the version number.
-*   `/teamwerx.approve [proposal]`: Approve a proposal. The proposal is the name of the proposal.
-*   `/teamwerx.reject [proposal]`: Reject a proposal. The proposal is the name of the proposal.
+*   `/teamwerx.delta [artifact-path] [version1] [version2]`: View the changes between different versions of a goal or plan using git diff.
+
+*   `/teamwerx.approve [proposal-id]`: Approve a proposal and merge its changes.
+    *   Updates proposal status to `approved`
+    *   Applies proposed changes to the target goal or plan
+    *   Archives the proposal for reference
+    *   Prompts developer to commit changes
+
+**Example:**
+```bash
+$ teamwerx approve add-oauth-to-login
+
+Approving proposal: add-oauth-to-login
+Target: .teamwerx/goals/implement-login.md
+
+Changes applied:
+  - Added OAuth dependency to success criteria
+  - Updated goal description
+
+Proposal approved and archived.
+Commit changes:
+  git add .teamwerx/goals/implement-login.md .teamwerx/proposals/
+  git commit -m "[teamWERX] Approve proposal: add OAuth to login"
+```
+
+*   `/teamwerx.reject [proposal-id] [reason]`: Reject a proposal.
+    *   Updates proposal status to `rejected`
+    *   Adds rejection rationale to the proposal
+    *   Archives the proposal for future reference
+    *   Does not modify the target goal or plan
+
+**Example:**
+```bash
+$ teamwerx reject add-oauth-to-login "OAuth adds too much complexity for MVP"
+
+Rejecting proposal: add-oauth-to-login
+Reason: OAuth adds too much complexity for MVP
+
+Proposal rejected and archived.
+Commit changes:
+  git add .teamwerx/proposals/
+  git commit -m "[teamWERX] Reject proposal: add OAuth to login"
+```
 
 *   `/teamwerx.plan`: Generates a task list based on the research and discussion.
 
@@ -237,6 +310,71 @@ Task 1 completed successfully.
 Review changes and commit:
   git add .
   git commit -m "[teamWERX] Create login form component"
+```
+
+## Error Handling
+
+teamWERX commands provide clear error messages to guide developers when issues occur.
+
+### Common Error Cases
+
+**No Current Goal Set:**
+```
+Error: No current goal set.
+
+Use '/teamwerx.use <goal-name>' to set a working goal, or
+use '/teamwerx.goal <description>' to create a new goal.
+
+Available goals:
+  - implement-auth
+  - add-payment
+```
+
+**Goal Not Found:**
+```
+Error: Goal 'implement-xyz' not found in .teamwerx/goals/
+
+Run '/teamwerx.list' to see available goals.
+```
+
+**Git Not Initialized:**
+```
+Error: This directory is not a git repository.
+
+teamWERX requires git for versioning. Run 'git init' first.
+```
+
+**Plan Doesn't Exist:**
+```
+Error: No plan found for goal 'implement-auth'.
+
+Run '/teamwerx.plan' to create an implementation plan first.
+```
+
+**Invalid Task ID:**
+```
+Error: Task ID '5' not found in plan.
+
+Available tasks:
+  1. Create login form component (pending)
+  2. Implement authentication logic (pending)
+  3. Add tests (pending)
+```
+
+**teamWERX Not Initialized:**
+```
+Error: teamWERX is not initialized in this project.
+
+Run '/teamwerx.init' to set up teamWERX in this project.
+```
+
+**No Pending Tasks:**
+```
+Error: No pending tasks in plan 'implement-auth'.
+
+All tasks are completed. Consider:
+  - Marking the goal as completed
+  - Creating a new goal with '/teamwerx.goal'
 ```
 
 ## Project Structure
@@ -464,6 +602,48 @@ Since all artifacts are tracked in git:
 [teamWERX] Complete 'setup-database' goal - all criteria met
 ```
 
+### Plan State Transitions
+
+Plans have their own state lifecycle, typically driven by the status of their tasks:
+
+```mermaid
+graph LR
+    A[pending] --> B[in-progress]
+    B --> C[completed]
+    B --> D[blocked]
+    D --> B
+```
+
+**Plan States:**
+*   **pending**: Plan created but no tasks started yet
+*   **in-progress**: At least one task is in-progress
+*   **blocked**: One or more tasks are blocked
+*   **completed**: All tasks are completed
+
+**State Transitions:**
+Plans automatically transition based on task status:
+*   All tasks `pending` → plan is `pending`
+*   Any task `in-progress` → plan is `in-progress`
+*   All tasks `completed` → plan is `completed`
+*   Any task `blocked` → plan can be marked `blocked`
+
+### Task State Transitions
+
+Individual tasks follow a simple linear state machine:
+
+```mermaid
+graph LR
+    A[pending] --> B[in-progress]
+    B --> C[completed]
+```
+
+**Task States:**
+*   **pending**: Task not yet started
+*   **in-progress**: Task currently being worked on
+*   **completed**: Task finished successfully
+
+Tasks don't have blocked or cancelled states—if a task can't be completed, the plan or goal should be marked blocked instead.
+
 ## Managing Concurrent Goals
 
 teamWERX is designed to support multiple goals being worked on simultaneously. This enables a single developer to coordinate multiple AI agents working on different aspects of a project in parallel.
@@ -582,6 +762,74 @@ The following is a recommended workflow for managing proposals:
 5.  If the proposal is approved, the changes are automatically merged into the corresponding goal or plan.
 6.  If the proposal is rejected, the proposal is archived for future reference.
 
+## Archiving Completed Goals
+
+Once goals are completed and no longer needed for active reference, they can be archived to keep the working set of goals clean and focused.
+
+### Archive Directory Structure
+
+```
+.teamwerx/archive/
+├── goals/
+│   └── implement-auth.md
+├── plans/
+│   └── implement-auth.md
+├── research/
+│   └── implement-auth/
+│       ├── report.md
+│       └── discussion.md
+└── proposals/
+    └── implement-auth/
+        └── add-oauth-1.md
+```
+
+### Manual Archiving
+
+teamWERX does not automatically archive goals. When you're ready to archive a completed goal:
+
+```bash
+# Archive all artifacts for a completed goal
+mv .teamwerx/goals/implement-auth.md .teamwerx/archive/goals/
+mv .teamwerx/plans/implement-auth.md .teamwerx/archive/plans/
+mv .teamwerx/research/implement-auth/ .teamwerx/archive/research/
+mv .teamwerx/proposals/implement-auth/ .teamwerx/archive/proposals/
+
+# Commit the archive
+git add .teamwerx/archive/ .teamwerx/goals/ .teamwerx/plans/ .teamwerx/research/ .teamwerx/proposals/
+git commit -m "[teamWERX] Archive completed goal: implement-auth"
+```
+
+### Impact of Archiving
+
+*   **`/teamwerx.list`**: Archived goals do not appear in the goals list
+*   **Git History**: All artifacts remain in git history and can be recovered
+*   **Reference**: Archived goals can still be examined in `.teamwerx/archive/` if needed
+*   **Clean Workspace**: Active goals remain focused and uncluttered
+
+### When to Archive
+
+Consider archiving goals when:
+*   Goal status is `completed` and sufficient time has passed (e.g., 30 days)
+*   Goal is `cancelled` and won't be revisited
+*   Project reaches a major milestone and older goals are no longer relevant
+*   The number of active goals becomes overwhelming
+
+### Unarchiving
+
+To restore an archived goal:
+
+```bash
+# Move artifacts back to active directories
+mv .teamwerx/archive/goals/implement-auth.md .teamwerx/goals/
+mv .teamwerx/archive/plans/implement-auth.md .teamwerx/plans/
+mv .teamwerx/archive/research/implement-auth/ .teamwerx/research/
+mv .teamwerx/archive/proposals/implement-auth/ .teamwerx/proposals/
+
+# Commit the changes
+git add .teamwerx/
+git commit -m "[teamWERX] Unarchive goal: implement-auth"
+```
+
 ## AI Integration
 
 teamWERX integrates with AI coding assistants through the `AGENTS.md` file, which serves dual purposes:
@@ -676,6 +924,176 @@ tasks:
 *   `tasks`: List of tasks with id, description, and status (pending | in-progress | completed)
 
 **Note:** Title and assignee fields are omitted. The plan title is derived from the goal. All tasks are for the single developer, potentially executed by different AI agents.
+
+### Proposal Schema
+
+```yaml
+---
+title: Add OAuth support to login
+type: goal-change  # or plan-change
+target: implement-login
+status: pending  # pending | approved | rejected
+created: 2025-10-25
+rationale: Users request social login options
+---
+
+# Proposal: Add OAuth support
+
+## Proposed Changes
+- Add OAuth2 library dependency
+- Create OAuth provider configuration
+- Update success criteria to include social login
+
+## Impact
+- Adds ~2 days to implementation timeline
+- Requires additional testing for OAuth flow
+
+## Alternatives Considered
+- Session-based auth only (rejected: less flexible)
+- Third-party auth service (rejected: cost)
+```
+
+**Field Descriptions:**
+*   `title`: Brief description of the proposal
+*   `type`: Whether this proposes changes to a goal or plan
+*   `target`: The goal or plan ID this proposal affects
+*   `status`: Current status (pending | approved | rejected)
+*   `created`: ISO 8601 date when proposal was created
+*   `rationale`: Brief explanation of why this change is proposed
+
+## Common Workflows
+
+This section provides end-to-end examples of typical teamWERX usage patterns.
+
+### Workflow 1: Creating and Completing a Goal from Scratch
+
+```bash
+# Initialize teamWERX in a new project
+cd my-project
+git init
+teamwerx init
+
+# Create a new goal
+teamwerx goal "Implement user authentication"
+# AI prompts for success criteria:
+# - Users can register with email/password
+# - Users can log in and receive JWT token
+# - Protected routes require authentication
+
+# Research the codebase
+teamwerx research
+# AI analyzes existing code, identifies where to integrate auth
+
+# Discuss approach
+teamwerx discuss "Should we use Passport.js or implement JWT manually?"
+teamwerx discuss "Let's use Passport.js with JWT strategy"
+
+# Generate plan
+teamwerx plan
+# AI creates plan with 5 tasks
+
+# Execute tasks
+teamwerx execute 1  # Install and configure Passport.js
+git add . && git commit -m "[teamWERX] Configure Passport.js"
+
+teamwerx execute 2  # Create user registration endpoint
+git add . && git commit -m "[teamWERX] Add user registration"
+
+teamwerx execute 3  # Implement login with JWT
+git add . && git commit -m "[teamWERX] Implement JWT login"
+
+teamwerx execute 4  # Add authentication middleware
+git add . && git commit -m "[teamWERX] Add auth middleware"
+
+teamwerx execute 5  # Protect existing routes
+git add . && git commit -m "[teamWERX] Protect routes with auth"
+
+# Mark goal as completed (manually edit goal status)
+# Then archive when ready
+```
+
+### Workflow 2: Coordinating Multiple Agents on Different Goals
+
+```bash
+# Developer starts two goals in parallel
+
+# Session 1 (Agent A): Authentication
+teamwerx goal "Implement user authentication"
+teamwerx use implement-user-authentication
+teamwerx research
+teamwerx plan
+teamwerx execute 1
+# Agent A continues working...
+
+# Session 2 (Agent B): Payment integration (different terminal/IDE)
+teamwerx goal "Add Stripe payment integration"
+teamwerx use add-stripe-payment-integration
+teamwerx research
+teamwerx plan
+teamwerx execute 1
+# Agent B continues working...
+
+# Later: Check status of all goals
+teamwerx list
+# Shows both goals with their current status
+
+# Continue work on specific goal
+teamwerx use implement-user-authentication
+teamwerx status
+teamwerx execute 2
+```
+
+### Workflow 3: Handling Blocked Tasks
+
+```bash
+# Start working on a goal
+teamwerx use implement-payment
+teamwerx execute 3
+
+# Task 3 is blocked because we need API credentials
+# Manually update plan: mark task 3 as pending, plan as blocked
+# Update goal status to blocked
+
+# Work on different goal while waiting
+teamwerx use implement-notifications
+teamwerx execute 1
+
+# Credentials arrive, unblock the payment goal
+# Manually update goal status back to in-progress
+teamwerx use implement-payment
+teamwerx execute 3  # Now can complete it
+```
+
+### Workflow 4: Making Changes with Proposals
+
+```bash
+# While working on auth, realize OAuth is needed
+teamwerx propose "Add OAuth support to login goal"
+# AI creates proposal in .teamwerx/proposals/implement-auth/add-oauth.md
+
+# Review the proposal
+cat .teamwerx/proposals/implement-auth/add-oauth.md
+
+# Approve it
+teamwerx approve add-oauth
+# Changes are merged into the goal
+
+# Continue with updated goal
+teamwerx plan  # Regenerate plan with OAuth included
+```
+
+### Workflow 5: Using Delta to Review Changes
+
+```bash
+# Check what changed in a goal over time
+teamwerx delta .teamwerx/goals/implement-auth.md HEAD~3 HEAD
+
+# Compare plan versions
+teamwerx delta .teamwerx/plans/implement-auth.md abc123 def456
+
+# Review recent changes
+git log -- .teamwerx/goals/implement-auth.md
+```
 
 ## Extensibility
 
