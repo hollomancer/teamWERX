@@ -120,16 +120,13 @@ Creates a new goal with automatic workspace setup. Prompts for success criteria 
 - Goal file to `.teamwerx/goals/[kebab-case-title].md`
 - Creates numbered workspace `.teamwerx/goals/00X-[slug]/` with discussion, plan, and research templates
 
-**`teamwerx list [--status <status>]`**
-
-Lists all goals in the project with optional filtering by status.
-
-**`teamwerx status [goal-name] [--context] [--summary]`**
+**`teamwerx status [goal-name] [--list] [--status <status>] [--context] [--summary]`**
 
 Shows detailed status of a goal (or all goals if omitted).
 - Default: Goal status, success criteria, plan info
-- `--context`: Tech stack, directories, artifacts
-- `--summary`: Discussion/implementation counts, recent records
+- `--list`: Show table view of all goals (filter with `--status`)
+- `--context`: Show project context with tech stack and directories
+- `--summary`: Show summary with discussion/implementation records
 
 **`teamwerx use <goal-name>`**
 
@@ -143,21 +140,17 @@ Analyzes the codebase and generates/updates research report. Detects technology 
 
 This command is designed to be executed by an AI agent.
 
-**`teamwerx discuss <message> [--goal <goal>]`**
+**`teamwerx discuss <message> [--goal <goal>] [--proposal]`**
 
-Appends a numbered discussion entry (D01, D02, ...) with timestamp and content to the goal's discussion log. Non-destructive; preserves all prior entries.
-
-This command is designed to be executed by an AI agent.
-
-**`teamwerx reflect [--goal <goal>] [--notes <text>]`**
-
-Adds a reflection entry (R01, R02, ...) to capture learning and adaptations during execution. Records what worked, what didn't, and adjustments made. Supports learning loops for continuous improvement.
+Appends a numbered discussion entry (D01, D02, ...) with timestamp and content to the goal's discussion log. Use `--proposal` to mark as a change proposal. Non-destructive; preserves all prior entries.
 
 This command is designed to be executed by an AI agent.
 
-**`teamwerx dry-run [--goal <goal>] [--notes <text>]`**
+**`teamwerx reflect [--goal <goal>] [--notes <text>] [--inspire] [--dry-run]`**
 
-Records a dry-run assessment in the discussion log, outlining expected file changes, risks, and dependencies.
+Adds a reflection entry (R01, R02, ...) to capture learning and adaptations during execution. Records what worked, what didn't, and adjustments made.
+- `--inspire`: Auto-generate suggestions based on plan state
+- `--dry-run`: Record a dry-run simulation assessment
 
 This command is designed to be executed by an AI agent.
 
@@ -184,11 +177,14 @@ If `goal-name` is provided, uses that goal; otherwise uses current goal.
 
 This command is designed to be executed by an AI agent.
 
+**`teamwerx complete [issue-or-title] [--goal <goal>] [--source <source>] [--notes <text>] [--limit <number>]`**
+
+Completes tasks and records implementations.
+- `--source fix`: Record an issue correction
+- `--source manual`: Collect staged git changes into task
+- `--source batch`: Batch-complete up to 5 pending tasks (default)
+
 ### Workspace Management
-
-**`teamwerx collect [--goal <goal>] [--title <title>]`**
-
-Collects staged git changes. Adds a completed plan task and creates `implementation/TXX.md` with diff summary and details.
 
 **`teamwerx summarize [--goal <goal>]`**
 
@@ -198,25 +194,11 @@ Generates or updates knowledge summary for the goal. Distills key decisions, reu
 
 Generates or refreshes `.teamwerx/goals/charter.md` based on detected technology stack and governance constraints.
 
-**`teamwerx correct <issue> [--goal <goal>]`**
-
-Logs an issue fix: adds a discussion entry, creates a completed task, and writes an implementation record describing the resolution.
-
-**`teamwerx implement [--goal <goal>] [--notes <text>]`**
-
-Batch-completes up to five pending tasks and creates implementation records for each.
-
-**`teamwerx inspire [--goal <goal>]`**
-
-Analyzes pending work and adds a discussion entry highlighting decision points or follow-up questions.
-
 ### Change Management
 
-**`teamwerx propose <description>`**
+**`teamwerx archive [goal-name] [--yes]`**
 
-Proposes a change to a goal or plan. Saves to `.teamwerx/proposals/[goal-name]/[proposal-id].md` with frontmatter (title, type, target, status, created, rationale).
-
-Proposals are reviewed manually—update the proposal file's `status` (e.g., `approved`, `rejected`) and rationale directly once a decision is made.
+Archives a completed goal (defaults to the current goal). Moves goal file, workspace, and artifacts to `.teamwerx/archive/`. Use `--yes` to skip confirmation.
 
 **`teamwerx archive [goal-name] [--yes]`**
 
@@ -240,10 +222,7 @@ project-root/
     │   │   └── implementation/      # Implementation records (T01.md, T02.md, ...)
     │   ├── 002-another-goal/
     │   ├── charter.md               # Project charter
-    │   └── registry.json            # Workspace numbering registry
-    ├── proposals/                   # Change proposals
-    ├── archive/                     # Archived goals and workspaces
-    └── .current-goal                # Current working goal
+    │   └── .current-goal                # Current working goal
 ```
 
 ### Structure Details
@@ -253,7 +232,7 @@ Each goal has two parts:
 2. **Numbered workspace** (`00X-goal-name/`) - Discussion, plan, research, and implementation records
 
 **Workspace numbering:**
-- Goals get sequential three-digit IDs (`001`, `002`, ...) tracked in `registry.json`
+- Goals get sequential three-digit IDs (`001`, `002`, ...) derived from filesystem
 - Discussion entries use `D01`, `D02`, ...
 - Reflection entries use `R01`, `R02`, ...
 - Tasks use `T01`, `T02`, ...
@@ -309,7 +288,7 @@ Goals progress through the following states:
 - **completed** - Success criteria met
 - **cancelled** - Abandoned
 
-**State transitions:** Update the `status` field in the goal's frontmatter manually, then commit to git.
+**State transitions:** Goal status is automatically derived from plan state. Manual overrides possible for `cancelled` and `archived`.
 
 **Plan/Task states:**
 - Plans: `pending` → `in-progress` → `completed` (or `blocked`)
@@ -325,11 +304,11 @@ All artifacts use YAML frontmatter for machine-readability.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `title` | string | ✓ | Brief, descriptive name |
-| `status` | enum | ✓ | draft \| open \| in-progress \| blocked \| completed \| cancelled |
 | `created` | date | ✓ | ISO 8601 date (YYYY-MM-DD) |
-| `success_criteria` | object | ✓ | Prioritized outcomes (p1, p2, p3 arrays) |
+| `success_criteria` | array | ✓ | Success criteria as flat array |
 | `outcomes` | array | - | Measurable metrics with targets and measurement methods (optional) |
 | `dependencies` | array | - | Goal IDs that must complete first (optional) |
+| `status` | enum | - | Manual override: cancelled \| archived (auto-derived otherwise) |
 
 ### Plan Schema
 
@@ -342,17 +321,6 @@ All artifacts use YAML frontmatter for machine-readability.
 
 **Task object:** `{id: string, title: string, status: string, notes: string, source: string, created: string, updated: string}`
 
-### Proposal Schema
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `title` | string | ✓ | Brief description of proposed change |
-| `type` | enum | ✓ | goal-change \| plan-change |
-| `target` | string | ✓ | Goal or plan ID this affects |
-| `status` | enum | ✓ | pending \| approved \| rejected |
-| `created` | date | ✓ | ISO 8601 date (YYYY-MM-DD) |
-| `rationale` | string | ✓ | Why this change is proposed |
-
 ## Multi-Goal Development
 
 teamWERX supports unlimited concurrent goals, each with independent workflows. Different AI agents can work on different goals in parallel.
@@ -361,7 +329,7 @@ teamWERX supports unlimited concurrent goals, each with independent workflows. D
 
 **Context management:**
 - `teamwerx use [goal-name]` - Set current working goal (stored in `.teamwerx/.current-goal`)
-- `teamwerx list [--status=<status>]` - List/filter all goals
+- `teamwerx status --list [--status=<status>]` - List/filter all goals
 - `teamwerx status [goal-name]` - Show detailed goal status
 
 **Dependencies:** Add `dependencies` field in goal frontmatter to track prerequisite goals
@@ -379,7 +347,7 @@ teamwerx research
 teamwerx execute
 
 # Check all goals
-teamwerx list
+teamwerx status --list
 ```
 
 ## Common Workflows
@@ -417,10 +385,10 @@ git add . && git commit -m "[teamWERX] Complete payment integration"
 
 ```bash
 # List all goals
-teamwerx list
+teamwerx status --list
 
 # Filter by status
-teamwerx list --status=in-progress
+teamwerx status --list --status=in-progress
 
 # Check status of specific goal
 teamwerx status add-payment-integration
@@ -433,11 +401,11 @@ teamwerx use authentication-feature
 
 ```bash
 # Propose a change
-teamwerx propose "Switch authentication to OAuth2"
+teamwerx discuss "Proposal: Switch authentication to OAuth2" --proposal
 
 # Review proposal (manual)
-# Edit .teamwerx/proposals/authentication/proposal-001.md
-# Set status: approved/rejected, add rationale
+# Edit .teamwerx/goals/001-my-goal/discuss.md
+# Update proposal status in discussion entry
 
 # If approved, update plan
 teamwerx plan
@@ -462,7 +430,7 @@ git commit -m "[teamWERX] Add authentication goal"
 
 - Use clear, distinctive goal names to avoid confusion between agents
 - Track dependencies in goal frontmatter when goals depend on each other
-- Regularly review all goals with `teamwerx list`
+- Regularly review all goals with `teamwerx status --list`
 - Archive completed goals to keep workspace focused
 - Limit number of goals in `in-progress` state simultaneously
 
@@ -470,7 +438,7 @@ git commit -m "[teamWERX] Add authentication goal"
 
 - Each agent works on one goal at a time (set with `teamwerx use`)
 - Use separate terminal sessions/IDEs for different agents
-- Review overall status with `teamwerx list` before switching contexts
+- Review overall status with `teamwerx status --list` before switching contexts
 - Document blockers in goal status when work is halted
 
 ### Research & Discussion
@@ -481,9 +449,9 @@ git commit -m "[teamWERX] Add authentication goal"
 
 ### Workspace Management
 
-- Use `teamwerx collect` to capture manual changes into the plan
-- Use `teamwerx correct` to log issue fixes
-- Use `teamwerx implement` to batch-complete tasks
+- Use `teamwerx complete --source manual` to capture manual changes into the plan
+- Use `teamwerx complete --source fix` to log issue fixes
+- Use `teamwerx complete --source batch` to batch-complete tasks
 - Keep `plan.md`, `discuss.md`, `research.md`, and `implementation/` synchronized with actual work
 
 ## Error Handling
@@ -504,12 +472,11 @@ A **proposal** is a suggested change to a goal or a plan. It provides a structur
 
 **Recommended workflow:**
 
-1. Create a proposal using `teamwerx propose`
-2. The proposal is saved with status `pending`
-3. Review the proposal and provide feedback
-4. Update the proposal file directly, setting `status` to `approved` or `rejected` and documenting the rationale
-5. If approved, apply changes to the corresponding goal or plan, then archive the proposal
-6. If rejected, archive the proposal (with rejection rationale) for future reference
+1. Create a proposal using `teamwerx discuss "Proposal: ..." --proposal`
+2. The proposal is saved as a discussion entry with proposal status `pending`
+3. Review the proposal and provide feedback in subsequent discussions
+4. Update the proposal status directly in the discussion log
+5. If approved, apply changes to the corresponding goal or plan
 
 ## Archiving
 
@@ -520,7 +487,7 @@ Use `teamwerx archive [goal-name]` to move completed work out of the active work
 3. Each artifact is moved into `.teamwerx/archive/<type>/`, automatically appending suffixes if files already exist
 4. If the archived goal was the current goal, `.teamwerx/.current-goal` is cleared
 
-Archived goals no longer appear in `teamwerx list`, but they remain in `.teamwerx/archive/` (and git history) for auditing.
+Archived goals no longer appear in `teamwerx status --list`, but they remain in `.teamwerx/archive/` (and git history) for auditing.
 
 ## Version Tracking
 
