@@ -65,27 +65,60 @@ The teamWERX workflow is divided into main phases. Multiple goals can progress t
 
 ### Workflow Visualization
 
-```mermaid
-graph TD
-    A[Developer creates goal] -->|teamwerx goal| B[Goal: draft]
-    B -->|teamwerx research| C[AI analyzes codebase]
-    C --> D[Research report created]
-    D -->|teamwerx discuss| E[Iterative discussion]
-    E -->|Multiple rounds| E
-    E -->|teamwerx plan| F[Goal: open, Plan created]
-    F -->|teamwerx execute| G[Goal: in-progress]
-    G -->|Execute tasks| H{All tasks done?}
-    H -->|No| G
-    H -->|Yes| I[Goal: completed]
-    G -->|Blocked?| J[Goal: blocked]
-    J -->|Issue resolved| G
+Process flow for a goal (teamWERX)
 
-    style B fill:#f9f,stroke:#333
-    style F fill:#bbf,stroke:#333
-    style G fill:#fb9,stroke:#333
-    style I fill:#9f9,stroke:#333
-    style J fill:#f66,stroke:#333
-```
++---------------------------+
+| Developer creates goal    |
++------------+--------------+
+             |
+             | teamwerx goal
+             v
++---------------------------+
+| Goal: draft               |
++------------+--------------+
+             |
+             | teamwerx research
+             v
++---------------------------+
+| AI analyzes codebase      |
++------------+--------------+
+             |
+             v
++---------------------------+
+| Research report created   |
++------------+--------------+
+             |
+             | teamwerx discuss
+             v
++---------------------------+
+| Iterative discussion      |
+| (multiple rounds) <-------+
++------------+--------------+
+             |
+             | teamwerx plan
+             v
++---------------------------+
+| Goal: open, Plan created  |
++------------+--------------+
+             |
+             | teamwerx execute
+             v
++---------------------------+
+| Goal: in-progress         |
++------------+--------------+
+             |
+             | Execute tasks
+             v
+         +------------------+
+         | All tasks done?  |
+         +---+---------+----+
+             |         |
+         No  |         | Yes
+             v         v
+   (loop back to)   +---------------+
+   Goal: in-progress| Goal: completed|
+                    +---------------+
+
 
 **Key Points:**
 - Goals start in `draft` state and progress through research and planning
