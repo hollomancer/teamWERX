@@ -26,8 +26,8 @@ Create a new goal with automatic workspace setup. Prompts for success criteria. 
 ### `teamwerx research [goal-name] [--goal <goal>]`
 Analyze the codebase and generate/update research report. Detects technology stack, languages, and directory structure. Updates `research.md` in goal workspace.
 
-### `teamwerx discuss <message> [--goal <goal>]`
-Append a numbered discussion entry (D01, D02, ...) with timestamp and content to the goal's discussion log. Non-destructive; preserves all prior entries.
+### `teamwerx discuss <message> [--goal <goal>] [--proposal]`
+Append a numbered discussion entry (D01, D02, ...) with timestamp and content to the goal's discussion log. Use `--proposal` flag to mark as a change proposal. Non-destructive; preserves all prior entries.
 
 ### `teamwerx reflect [--goal <goal>] [--notes <text>]`
 Add a reflection entry (R01, R02, ...) to capture learning and adaptations during execution. Records what worked, what didn't, and adjustments made.
@@ -45,20 +45,17 @@ Execute tasks from the plan:
 3. Update task status to completed in plan file
 4. Prompt developer to commit
 
-### `teamwerx collect [--goal <goal>] [--title <title>]`
-Collect staged git changes. Adds a completed plan task and creates `implementation/TXX.md` with diff summary and details.
+### `teamwerx complete [issue-or-title] [--goal <goal>] [--source <fix|manual|batch>]`
+Complete tasks and record implementations. Three modes:
+- `--source fix` - Record an issue correction (discussion + task + implementation)
+- `--source manual` - Collect staged git changes into task and implementation
+- `--source batch` (default) - Batch-complete up to 5 pending tasks with `--limit` option
 
 ### `teamwerx summarize [--goal <goal>]`
 Generate or update knowledge summary for the goal. Distills key decisions, reusable patterns, and gotchas from discussions and implementations into `summary.md`.
 
 ### `teamwerx charter`
 Generate/refresh `.teamwerx/goals/charter.md` based on detected technology stack and governance constraints.
-
-### `teamwerx correct <issue> [--goal <goal>]`
-Log an issue fix: adds a discussion entry, creates a completed task, and writes an implementation record describing the resolution.
-
-### `teamwerx implement [--goal <goal>] [--notes <text>]`
-Batch-complete up to five pending tasks and create implementation records for each.
 
 ### `teamwerx inspire [--goal <goal>]`
 Analyze pending work and add a discussion entry highlighting decision points or follow-up questions.
@@ -75,8 +72,6 @@ Show detailed status of goal (or all goals if omitted).
 ### `teamwerx use <goal-name>`
 Set current working goal context. Store in `.teamwerx/.current-goal`.
 
-### `teamwerx propose <description>`
-Propose change to goal/plan. Save to `.teamwerx/proposals/[goal-name]/[proposal-id].md` with frontmatter.
 
 ### `teamwerx archive [goal-name] [--yes]`
 Archive a completed goal. Moves goal file, workspace, and artifacts to `.teamwerx/archive/`. Use `--yes` to skip confirmation.
@@ -86,6 +81,6 @@ Archive a completed goal. Moves goal file, workspace, and artifacts to `.teamwer
 - Git commits: Manual, prefix `[teamWERX]`
 - File naming: kebab-case
 - Task statuses: pending | in-progress | completed
-- Goal statuses: draft | open | in-progress | blocked | completed | cancelled
+- Goal statuses: draft | open | in-progress | blocked | completed | cancelled | archived (derived from plan state)
 - All commands are **non-destructive**: append to logs, create new entries, or add addenda instead of overwriting artifacts. Use git history for changes that must replace existing content.
 - Workspace numbering: each goal gets a three-digit ID (`001`, `002`, ...), discussions use `Dxx`, tasks use `Txx`, reflections use `Rxx`. Preserve numbering when editing files manually.

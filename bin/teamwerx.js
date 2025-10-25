@@ -28,15 +28,12 @@ const discussCommand = require('../lib/commands/discuss');
 const dryRunCommand = require('../lib/commands/dry-run');
 const planCommand = require('../lib/commands/plan');
 const executeCommand = require('../lib/commands/execute');
-const proposeCommand = require('../lib/commands/propose');
 const archiveCommand = require('../lib/commands/archive');
-const collectCommand = require('../lib/commands/collect');
 const charterCommand = require('../lib/commands/charter');
-const correctCommand = require('../lib/commands/correct');
-const implementCommand = require('../lib/commands/implement');
 const inspireCommand = require('../lib/commands/inspire');
 const reflectCommand = require('../lib/commands/reflect');
 const summarizeCommand = require('../lib/commands/summarize');
+const completeCommand = require('../lib/commands/complete');
 
 // Configure CLI
 program
@@ -83,6 +80,7 @@ program
   .command('discuss <message>')
   .description('Continue structured discussion about implementation strategy')
   .option('--goal <goal>', 'Specify the goal slug')
+  .option('--proposal', 'Mark this as a proposal for changes')
   .action(discussCommand);
 
 program
@@ -106,9 +104,13 @@ program
   .action(executeCommand);
 
 program
-  .command('propose <description>')
-  .description('Propose a change to a goal or plan')
-  .action(proposeCommand);
+  .command('complete [issue-or-title]')
+  .description('Complete tasks and record implementations')
+  .option('--goal <goal>', 'Specify the goal slug')
+  .option('--source <source>', 'Source: fix|manual|batch (default: batch)', 'batch')
+  .option('--notes <text>', 'Notes for batch completion')
+  .option('--limit <number>', 'Number of tasks to complete (batch mode)', 5)
+  .action(completeCommand);
 
 program
   .command('archive [goal-name]')
@@ -117,29 +119,9 @@ program
   .action(archiveCommand);
 
 program
-  .command('collect')
-  .description('Collect staged manual changes into plan and implementation logs')
-  .option('--goal <goal>', 'Specify the goal slug')
-  .option('--title <title>', 'Override the generated task title')
-  .action(collectCommand);
-
-program
   .command('charter')
   .description('Generate or update the project charter')
   .action(charterCommand);
-
-program
-  .command('correct <issue>')
-  .description('Record an issue correction (discussion + plan + implementation)')
-  .option('--goal <goal>', 'Specify the goal slug')
-  .action(correctCommand);
-
-program
-  .command('implement')
-  .description('Complete up to five pending tasks and create implementation logs')
-  .option('--goal <goal>', 'Specify the goal slug')
-  .option('--notes <text>', 'Notes to include on each completed task')
-  .action(implementCommand);
 
 program
   .command('inspire')
