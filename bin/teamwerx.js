@@ -60,9 +60,60 @@ program
   .action(statusCommand);
 
 program
-  .command("use <goal-name>")
-  .description("Set the current working goal context")
-  .action(useCommand);
+  .command("use [goal-name]")
+  .description(
+    "Set the current working goal context (show current when omitted)"
+  )
+  .action(async (goalName) => {
+    const use = require("../lib/commands/use");
+    if (!goalName) {
+      // Show current goal
+      const { getCurrentGoal } = require("../lib/utils/file");
+      const current = await getCurrentGoal();
+      if (current) {
+        console.log("Current goal:\t" + current);
+      } else {
+        console.log(
+          "No current goal set. Use `teamwerx use <goal-name>` to set one."
+        );
+      }
+    } else {
+      await use(goalName);
+    }
+  });
+
+// Convenience command: show the current goal without changing it
+program
+  .command("current")
+  .description("Show the current goal (reads .teamwerx/.current-goal)")
+  .action(async () => {
+    const { getCurrentGoal } = require("../lib/utils/file");
+    try {
+      const current = await getCurrentGoal();
+      if (current) {
+        console.log(chalk.green(`Current goal: ${current}`));
+      } else {
+        console.log(
+          chalk.yellow(
+            "No current goal set. Use: " +
+              chalk.cyan("teamwerx use <goal-name>")
+          )
+        );
+      }
+    } catch (err) {
+      console.error(chalk.red("Error reading current goal:"), err.message);
+      process.exit(1);
+    }
+  });
+
+program
+  .command("list")
+  .description("Alias for `status --list` — show a table of goals")
+  .option("--status <status>", "Filter by status")
+  .action(async (options) => {
+    // Delegate to status command with --list
+    await statusCommand(null, { list: true, status: options.status });
+  });
 
 program
   .command("research [goal-name]")
@@ -90,6 +141,7 @@ program
 program
   .command("execute [goal-name]")
   .description("Execute the tasks in the plan")
+  .option("--dry-run", "Preview planned changes without applying them")
   .action(executeCommand);
 
 program
@@ -118,14 +170,33 @@ program
   .description("Generate or update the project charter")
   .action(charterCommand);
 
+// Reflect is a semantic alias of discuss: create a discussion entry with reflection semantics.
+// Keep a small wrapper so users can run `teamwerx reflect ...` for discoverability.
 program
-  .command("reflect")
+  .command("reflect [notes]")
   .description("Add reflection entry to capture learning and adaptations")
   .option("--goal <goal>", "Specify the goal slug")
-  .option("--notes <text>", "Reflection notes")
   .option("--inspire", "Auto-generate suggestions based on plan state")
   .option("--dry-run", "Record a dry-run simulation assessment")
-  .action(reflectCommand);
+  .action(async (notes, options = {}) => {
+    // Build a reflection message and delegate to the discuss command.
+    const messageLines = [];
+    messageLines.push("**Reflection Entry**");
+    if (notes) messageLines.push("", notes);
+    if (options.inspire)
+      messageLines.push(
+        "",
+        "_Inspire requested: AI suggestions may be appended by agents._"
+      );
+    const message = messageLines.join("\n");
+
+    try {
+      await discussCommand(message, { goal: options.goal, proposal: false });
+    } catch (err) {
+      console.error(chalk.red("Error adding reflection:"), err.message);
+      process.exit(1);
+    }
+  });
 
 program
   .command("summarize")

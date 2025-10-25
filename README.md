@@ -56,80 +56,294 @@ teamwerx execute
 
 The teamWERX workflow is divided into main phases. Multiple goals can progress through these phases concurrently, with different AI agents potentially working on different goals under the developer's direction.
 
-1. **Goal Setting**: The developer defines the high-level goals for the project or feature
-2. **Research**: The AI agent analyzes the codebase and generates a research report
-3. **Discussion**: The developer and AI agents discuss potential implementation strategies
-4. **Planning**: Based on the research and discussion, a detailed implementation plan is created
-5. **Execution**: The plan is executed by AI agents under the developer's guidance
-6. **Change Management**: Changes to goals and plans can be proposed and tracked
+Core phases:
 
-### Workflow Visualization
+1. **Goal Setting** — Define the high-level goal and success criteria.
+2. **Research** — Generate a codebase-aware research report to surface constraints and options.
+3. **Discussion** — Capture reasoning, proposals, and decisions in an append-only discussion log.
+4. **Planning** — Create a numbered task plan (T01, T02, ...) for implementation.
+5. **Execution** — Apply changes, one task at a time, and record progress.
+6. **Change Management & Summaries** — Propose changes, capture reflections, and produce a knowledge summary.
 
-Process flow for a goal (teamWERX)
+### Quick Recipe (copy/paste)
 
-+---------------------------+
-| Developer creates goal |
-+------------+--------------+
-|
-| teamwerx goal
-v
-+---------------------------+
-| Goal: draft |
-+------------+--------------+
-|
-| teamwerx research
-v
-+---------------------------+
-| AI analyzes codebase |
-+------------+--------------+
-|
-v
-+---------------------------+
-| Research report created |
-+------------+--------------+
-|
-| teamwerx discuss
-v
-+---------------------------+
-| Iterative discussion |
-| (multiple rounds) <-------+
-+------------+--------------+
-|
-| teamwerx plan
-v
-+---------------------------+
-| Goal: open, Plan created |
-+------------+--------------+
-|
-| teamwerx execute
-v
-+---------------------------+
-| Goal: in-progress |
-+------------+--------------+
-|
-| Execute tasks
-v
-+------------------+
-| All tasks done? |
-+---+---------+----+
-| |
-No | | Yes
-v v
-(loop back to) +---------------+
-Goal: in-progress| Goal: completed|
-+---------------+
+This minimal end-to-end recipe shows common commands and the files they create or update. Use `teamwerx use <goal-slug>` to set context or pass `--goal <slug>` to commands.
+
+0. Initialize (once per repo)
+
+- npm: install globally or locally and run:
+  - teamwerx init
+- Creates: `.teamwerx/` and templates
+
+1. Create a goal
+
+- teamwerx goal "Implement user authentication"
+- Creates: `.teamwerx/goals/<slug>.md` and workspace `.teamwerx/goals/00X-<slug>/`
+
+2. Set working goal context
+
+- teamwerx use implement-user-authentication
+- Stores: `.teamwerx/.current-goal`
+
+3. Research the codebase
+
+- teamwerx research
+- Updates/creates: `.teamwerx/goals/00X-<slug>/research.md`
+
+4. Capture discussion / proposals
+
+- teamwerx discuss "Should we use JWT or sessions?"
+- Optionally: teamwerx discuss "..." --proposal
+- Appends to: `.teamwerx/goals/00X-<slug>/discuss.md`
+
+5. Create or update a plan
+
+- Interactive: teamwerx plan --interactive
+- Add tasks inline: teamwerx plan --task "Add login endpoint" --task "Add session store"
+- Updates: `.teamwerx/goals/00X-<slug>/plan.md` (task statuses: pending | in-progress | completed | blocked)
+
+6. Inspect status and plan summary
+
+- teamwerx status
+- Quick list: teamwerx status --list
+- Programmatic JSON: teamwerx status --json
+- Uses: reads `.teamwerx/goals/00X-<slug>/plan.md` to derive counts and goal status
+
+7. Dry-run and execute tasks
+
+- Preview (recommended): teamwerx execute --dry-run
+- Execute: teamwerx execute
+- Effect: applies the next pending task, updates `plan.md`, and records implementation notes
+
+8. Record completed work
+
+- Manual staged changes: teamwerx complete --source manual
+- For issue-fix flows: teamwerx complete --source fix --notes "fix: adjust login rate limit"
+- Batch: teamwerx complete --source batch --limit 3
+- Updates plan task statuses and adds implementation records to the workspace
+
+9. Reflect and summarize
+
+- teamwerx reflect --notes "What went well..."
+- teamwerx summarize
+- Creates/updates summary: `.teamwerx/goals/00X-<slug>/summary.md`
+
+### Command → Primary file mapping
+
+- `teamwerx init` → `.teamwerx/` (project-level templates)
+- `teamwerx goal` → `.teamwerx/goals/<slug>.md`, `.teamwerx/goals/00X-<slug>/` (workspace created)
+- `teamwerx use` → `.teamwerx/.current-goal` (context)
+- `teamwerx research` → `.teamwerx/goals/00X-<slug>/research.md`
+- `teamwerx discuss` → `.teamwerx/goals/00X-<slug>/discuss.md` (append-only)
+- `teamwerx plan` → `.teamwerx/goals/00X-<slug>/plan.md` (authoritative plan file)
+- `teamwerx status` → reads `.teamwerx/goals/00X-<slug>/plan.md` (derives goal-level status at read-time)
+- `teamwerx execute` → modifies files according to planned task, updates `plan.md`, and writes implementation notes in the workspace
+- `teamwerx complete` → updates `plan.md` and appends implementation entries (modes: `manual`, `fix`, `batch`)
+- `teamwerx reflect` → `.teamwerx/goals/00X-<slug>/reflect.md` (or appended to `discuss.md` depending on implementation)
+- `teamwerx summarize` → `.teamwerx/goals/00X-<slug>/summary.md`
+
+### Best-practices (recommendations)
+
+- Always set the active goal (`teamwerx use <slug>`) or pass `--goal <slug>` to avoid accidental updates to the wrong workspace.
+- Run `teamwerx status --summary` and `teamwerx execute --dry-run` before a real `teamwerx execute`.
+- Keep a small, focused plan (T01–T05) per execution session to reduce conflicts and make reviews easy.
+- Preserve traceability: prefer `teamwerx complete --source manual` when you make local changes and commit them; this links the git patch to plan progress.
 
 **Key Points:**
 
-- Goals start in `draft` state and progress through research and planning
-- The discussion phase is iterative (multiple rounds possible)
-- Execution moves the goal to `in-progress`
-- Tasks are executed one-by-one until all complete
-- Goals can be blocked and later unblocked
+- The canonical plan file is `.teamwerx/goals/00X-<slug>/plan.md`; goal status is derived at read-time by inspecting that plan (do not rely on a persisted `plan.status` elsewhere).
+- Commands are mostly non-destructive and append to workspace artifacts; `execute` and `complete` change plan/task state and may write implementation notes.
+- Use `--json` output and `--dry-run` where available to integrate teamWERX into automation or CI safely.
 
 ## Commands
 
 All commands are **non-destructive**. Instead of overwriting existing artifacts, they append new entries or create new files so prior context remains available in git history.
+
+### Command Behavior (detailed)
+
+The table below explains what each CLI command actually does, the primary flags you should know, which files it reads or writes, a short example, and safety notes or recommendations.
+
+- `init`
+
+  - What it does: Initialize teamWERX in the current repository.
+  - Flags: none
+  - Files read/written:
+    - Writes: `.teamwerx/` directory, `.teamwerx/AGENTS.md`, template files under `.teamwerx/`
+  - Example:
+    - `teamwerx init`
+  - Safety notes:
+    - Requires a git repository (it checks for git). Safe to run multiple times; it will update templates but not remove existing workspaces.
+
+- `goal [description]`
+
+  - What it does: Create a new goal descriptor and numbered workspace.
+  - Flags:
+    - none (interactive prompts may be shown)
+  - Files read/written:
+    - Writes: `.teamwerx/goals/<slug>.md` (goal metadata), `.teamwerx/goals/00X-<slug>/` workspace (plan.md, discuss.md, research.md templates)
+  - Example:
+    - `teamwerx goal "Add SSO support"`
+  - Safety notes:
+    - Non-destructive — it creates files only. Commit the created goal files to preserve history.
+
+- `use <goal-name>`
+
+  - What it does: Set the current working goal context for subsequent commands.
+  - Flags: none
+  - Files read/written:
+    - Writes: `.teamwerx/.current-goal`
+  - Example:
+    - `teamwerx use add-sso`
+  - Safety notes:
+    - This is local workspace state. Prefer passing `--goal <slug>` to a command in scripts to avoid implicit context.
+
+- `research [goal-name]` / `research --goal <slug>`
+
+  - What it does: Analyze the codebase and produce (or update) a research report tailored to the goal.
+  - Flags:
+    - `--goal <slug>` — operate on a specific goal without changing `.current-goal`
+  - Files read/written:
+    - Reads repo files to analyze structure and dependencies
+    - Writes: `.teamwerx/goals/00X-<slug>/research.md`
+  - Example:
+    - `teamwerx research` (when a goal is active)
+    - `teamwerx research --goal add-sso`
+  - Safety notes:
+    - Read-only for project files; modifies only workspace artifacts.
+
+- `discuss <message> [--proposal]`
+
+  - What it does: Append a timestamped, numbered discussion entry to the goal discussion log.
+  - Flags:
+    - `--proposal` — mark the entry as a formal proposal
+    - `--goal <slug>` — (optional) operate on another goal
+  - Files read/written:
+    - Appends to: `.teamwerx/goals/00X-<slug>/discuss.md`
+  - Example:
+    - `teamwerx discuss "Prefer OAuth2 because it supports PKCE" --proposal`
+  - Safety notes:
+    - Append-only. Good for traceability and preserving context for review.
+
+- `plan [considerations] [--task <task>] [--interactive]`
+
+  - What it does: Create or update a plan with numbered tasks. Supports adding tasks inline or interactively.
+  - Flags:
+    - `--task <task>` (repeatable) — add one or more tasks non-interactively
+    - `--interactive` — walk through prompts to build tasks
+    - `--goal <slug>` — operate on a specific goal
+  - Files read/written:
+    - Reads/writes: `.teamwerx/goals/00X-<slug>/plan.md` (this is the authoritative plan)
+  - Example:
+    - `teamwerx plan --task "Add login endpoint" --task "Add session store"`
+    - `teamwerx plan --interactive`
+  - Safety notes:
+    - Editing plan.md updates the canonical plan. Prefer small, focused batches of tasks to simplify execution and review.
+
+- `status [goal-name] [--list] [--status <status>] [--context] [--summary] [--json]`
+
+  - What it does: Derive and show goal-level status and plan summaries by reading the plan file(s).
+  - Flags:
+    - `--list` — show a table of goals
+    - `--status <status>` — filter when using `--list`
+    - `--summary` — show counts and a short plan summary
+    - `--context` — include project context/tech stack
+    - `--json` — machine-readable output
+  - Files read/written:
+    - Reads: `.teamwerx/goals/*/plan.md` and related workspace artifacts
+  - Example:
+    - `teamwerx status` (for active goal)
+    - `teamwerx status --list --status open`
+    - `teamwerx status --json`
+  - Safety notes:
+    - Read-only. `status` derives state at read-time — do not expect `plan.status` to be persisted elsewhere.
+
+- `execute [goal-name] [--dry-run]`
+
+  - What it does: Execute the next pending task in the plan. When applying, it updates task status and may write implementation artifacts.
+  - Flags:
+    - `--dry-run` — preview planned changes without modifying repository files (recommended)
+    - `--goal <slug>` — operate on a specific goal
+  - Files read/written:
+    - Reads: `.teamwerx/goals/00X-<slug>/plan.md`
+    - Writes: updates `plan.md` task status; writes implementation notes and may modify project files (when applied)
+  - Example:
+    - `teamwerx execute --dry-run` — preview
+    - `teamwerx execute` — apply
+  - Safety notes:
+    - Prefer `--dry-run` first. When `execute` applies changes, review diffs before committing. Consider using `teamwerx complete --source manual` to record local commits.
+
+- `complete [issue-or-title] [--goal <goal>] [--source <fix|manual|batch>] [--notes <text>] [--limit <number>]`
+
+  - What it does: Mark tasks complete and record implementation details. Modes:
+    - `fix` — associate a specific issue or fix with a task
+    - `manual` — read staged git changes and attach them to a task
+    - `batch` — mark multiple tasks completed in one operation
+  - Flags:
+    - `--source` (default: `batch`)
+    - `--notes` — human notes about the completion
+    - `--limit` — when batch completing
+  - Files read/written:
+    - Reads: git index (for `manual`), `.teamwerx/goals/00X-<slug>/plan.md`
+    - Writes: updates `plan.md`, and creates implementation records (e.g., `.teamwerx/goals/00X-<slug>/implementation/T01.md`)
+  - Example:
+    - `teamwerx complete --source manual`
+    - `teamwerx complete "Fix login bug" --source fix --notes "rate limit adjusted"`
+  - Safety notes:
+    - `manual` mode reads staged changes — ensure you have committed or staged the intended patch. `fix` mode is for small issue-based changes.
+
+- `reflect [--goal <goal>] [--notes <text>] [--inspire] [--dry-run]`
+
+  - What it does: Append reflections (R01, R02, ...) capturing lessons and adaptations. `--inspire` can auto-suggest follow-ups.
+  - Flags:
+    - `--inspire` — request autogenerated suggestions
+    - `--dry-run` — simulate entry creation
+  - Files read/written:
+    - Appends to: `.teamwerx/goals/00X-<slug>/discuss.md` or `.teamwerx/goals/00X-<slug>/reflect.md` depending on implementation
+  - Example:
+    - `teamwerx reflect --notes "Refined success criteria based on load tests"`
+  - Safety notes:
+    - Append-only behavior; safe to run anytime.
+
+- `summarize [--goal <goal>]`
+
+  - What it does: Generate or refresh a condensed `summary.md` capturing decisions, patterns, and key outcomes to aid future work.
+  - Flags:
+    - `--goal <goal>`
+  - Files read/written:
+    - Writes/updates: `.teamwerx/goals/00X-<slug>/summary.md`
+  - Example:
+    - `teamwerx summarize`
+  - Safety notes:
+    - Intended as a read/aggregation step — safe and non-destructive.
+
+- `charter`
+
+  - What it does: Generate or refresh a project-level charter file (e.g., `.teamwerx/goals/charter.md`) based on detected stack & governance constraints.
+  - Flags: none
+  - Files read/written:
+    - Writes/updates: `.teamwerx/goals/charter.md`
+  - Example:
+    - `teamwerx charter`
+  - Safety notes:
+    - Non-destructive; intended to provide project-level guidance for AI agents.
+
+- `archive [goal-name] [--yes]`
+  - What it does: Move a completed or abandoned goal workspace into `.teamwerx/archive/` for long-term storage.
+  - Flags:
+    - `--yes` — skip confirmation prompts
+  - Files read/written:
+    - Moves: `.teamwerx/goals/00X-<slug>/` → `.teamwerx/archive/`
+  - Example:
+    - `teamwerx archive add-sso --yes`
+  - Safety notes:
+    - This operation relocates files. Keep backups or use git to revert if done accidentally.
+
+#### General Safety & Integration Recommendations
+
+- Always prefer `--goal <slug>` in automation or scripts to avoid implicit `.current-goal` context.
+- Use `teamwerx status --json` and `teamwerx execute --dry-run` in CI or automation to preview changes safely.
+- Keep plan edits small and focused (T01–T05) per execution run to reduce overlapping changes and simplify review.
+- When performing local development that you want to record as part of a plan, stage and commit changes first, then run `teamwerx complete --source manual` to link the git patch to the appropriate task.
 
 ### Initialization
 
