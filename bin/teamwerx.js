@@ -20,17 +20,14 @@ const collectValues = (value, previous) => {
 // Import commands
 const initCommand = require('../lib/commands/init');
 const goalCommand = require('../lib/commands/goal');
-const listCommand = require('../lib/commands/list');
 const statusCommand = require('../lib/commands/status');
 const useCommand = require('../lib/commands/use');
 const researchCommand = require('../lib/commands/research');
 const discussCommand = require('../lib/commands/discuss');
-const dryRunCommand = require('../lib/commands/dry-run');
 const planCommand = require('../lib/commands/plan');
 const executeCommand = require('../lib/commands/execute');
 const archiveCommand = require('../lib/commands/archive');
 const charterCommand = require('../lib/commands/charter');
-const inspireCommand = require('../lib/commands/inspire');
 const reflectCommand = require('../lib/commands/reflect');
 const summarizeCommand = require('../lib/commands/summarize');
 const completeCommand = require('../lib/commands/complete');
@@ -53,14 +50,10 @@ program
   .action(goalCommand);
 
 program
-  .command('list')
-  .description('List all goals in the project')
-  .option('--status <status>', 'Filter by status')
-  .action(listCommand);
-
-program
   .command('status [goal-name]')
   .description('Show detailed status of a specific goal or all goals')
+  .option('--list', 'Show table view of all goals')
+  .option('--status <status>', 'Filter by status (use with --list)')
   .option('--context', 'Show project context with tech stack and directories')
   .option('--summary', 'Show summary with discussion/implementation records')
   .action(statusCommand);
@@ -82,13 +75,6 @@ program
   .option('--goal <goal>', 'Specify the goal slug')
   .option('--proposal', 'Mark this as a proposal for changes')
   .action(discussCommand);
-
-program
-  .command('dry-run')
-  .description('Simulate the implementation plan to identify potential issues')
-  .option('--goal <goal>', 'Specify the goal slug')
-  .option('--notes <text>', 'Dry-run notes')
-  .action(dryRunCommand);
 
 program
   .command('plan [considerations]')
@@ -124,16 +110,12 @@ program
   .action(charterCommand);
 
 program
-  .command('inspire')
-  .description('Add inspiration / contention points to the discussion log')
-  .option('--goal <goal>', 'Specify the goal slug')
-  .action(inspireCommand);
-
-program
   .command('reflect')
   .description('Add reflection entry to capture learning and adaptations')
   .option('--goal <goal>', 'Specify the goal slug')
   .option('--notes <text>', 'Reflection notes')
+  .option('--inspire', 'Auto-generate suggestions based on plan state')
+  .option('--dry-run', 'Record a dry-run simulation assessment')
   .action(reflectCommand);
 
 program
