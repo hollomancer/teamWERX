@@ -110,6 +110,34 @@ This phase is focused on exploring the "how" of the project.
 *   `/teamwerx.research`
 *   `/teamwerx.discuss`
 
+**Research vs Discussion - Understanding the Difference:**
+
+These two commands serve distinct purposes in the workflow:
+
+**`/teamwerx.research`** - Initial Codebase Analysis
+*   **Purpose**: One-time analysis of the existing codebase for the current goal
+*   **When**: Execute once after creating a goal, before planning
+*   **Output**: Structured report in `.teamwerx/research/[goal]/report.md`
+*   **AI Action**: Read and analyze codebase, identify relevant files/functions/patterns, document findings
+*   **Example**: "Analyze the existing authentication system and identify integration points"
+
+**`/teamwerx.discuss [message]`** - Iterative Conversation
+*   **Purpose**: Multi-round conversation to refine implementation approach
+*   **When**: After research, potentially multiple times before planning
+*   **Output**: Appends to `.teamwerx/research/[goal]/discussion.md`
+*   **AI Action**: Respond to developer's questions, propose alternatives, provide feedback
+*   **Example**: `/teamwerx.discuss "Should we use JWT or session-based auth?"`
+
+**Recommended Flow:**
+```bash
+teamwerx goal "Implement authentication"
+teamwerx research                              # AI analyzes codebase once
+teamwerx discuss "Which auth library works best with our stack?"
+teamwerx discuss "How should we handle refresh tokens?"
+teamwerx discuss "Let's proceed with JWT and refresh tokens"
+teamwerx plan                                  # Generate implementation plan
+```
+
 ### 3. Planning
 
 This phase is focused on creating a detailed implementation plan.
