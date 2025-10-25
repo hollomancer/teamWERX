@@ -149,6 +149,12 @@ Appends a numbered discussion entry (D01, D02, ...) with timestamp and content t
 
 This command is designed to be executed by an AI agent.
 
+**`teamwerx reflect [--goal <goal>] [--notes <text>]`**
+
+Adds a reflection entry (R01, R02, ...) to capture learning and adaptations during execution. Records what worked, what didn't, and adjustments made. Supports learning loops for continuous improvement.
+
+This command is designed to be executed by an AI agent.
+
 **`teamwerx dry-run [--goal <goal>] [--notes <text>]`**
 
 Records a dry-run assessment in the discussion log, outlining expected file changes, risks, and dependencies.
@@ -183,6 +189,10 @@ This command is designed to be executed by an AI agent.
 **`teamwerx collect [--goal <goal>] [--title <title>]`**
 
 Collects staged git changes. Adds a completed plan task and creates `implementation/TXX.md` with diff summary and details.
+
+**`teamwerx summarize [--goal <goal>]`**
+
+Generates or updates knowledge summary for the goal. Distills key decisions, reusable patterns, and gotchas from discussions and implementations into `summary.md`. Helps with knowledge distillation and token efficiency for future goals.
 
 **`teamwerx charter`**
 
@@ -223,9 +233,10 @@ project-root/
     ├── goals/
     │   ├── goal-name.md             # Goal definition file
     │   ├── 001-goal-name/           # Numbered workspace
-    │   │   ├── discuss.md           # Discussion log (D01, D02, ...)
+    │   │   ├── discuss.md           # Discussion log (D01, D02, ...) and reflections (R01, R02, ...)
     │   │   ├── plan.md              # Task plan (T01, T02, ...)
-    │   │   ├── research.md          # Research report
+    │   │   ├── research.md          # Research report with business context
+    │   │   ├── summary.md           # Knowledge summary (optional)
     │   │   └── implementation/      # Implementation records (T01.md, T02.md, ...)
     │   ├── 002-another-goal/
     │   ├── charter.md               # Project charter
@@ -244,6 +255,7 @@ Each goal has two parts:
 **Workspace numbering:**
 - Goals get sequential three-digit IDs (`001`, `002`, ...) tracked in `registry.json`
 - Discussion entries use `D01`, `D02`, ...
+- Reflection entries use `R01`, `R02`, ...
 - Tasks use `T01`, `T02`, ...
 - Implementation records match task IDs (`T01.md`, `T02.md`, ...)
 
@@ -315,7 +327,8 @@ All artifacts use YAML frontmatter for machine-readability.
 | `title` | string | ✓ | Brief, descriptive name |
 | `status` | enum | ✓ | draft \| open \| in-progress \| blocked \| completed \| cancelled |
 | `created` | date | ✓ | ISO 8601 date (YYYY-MM-DD) |
-| `success_criteria` | array | ✓ | List of measurable outcomes |
+| `success_criteria` | object | ✓ | Prioritized outcomes (p1, p2, p3 arrays) |
+| `outcomes` | array | - | Measurable metrics with targets and measurement methods (optional) |
 | `dependencies` | array | - | Goal IDs that must complete first (optional) |
 
 ### Plan Schema

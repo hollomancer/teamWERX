@@ -35,6 +35,8 @@ const charterCommand = require('../lib/commands/charter');
 const correctCommand = require('../lib/commands/correct');
 const implementCommand = require('../lib/commands/implement');
 const inspireCommand = require('../lib/commands/inspire');
+const reflectCommand = require('../lib/commands/reflect');
+const summarizeCommand = require('../lib/commands/summarize');
 
 // Configure CLI
 program
@@ -144,6 +146,19 @@ program
   .description('Add inspiration / contention points to the discussion log')
   .option('--goal <goal>', 'Specify the goal slug')
   .action(inspireCommand);
+
+program
+  .command('reflect')
+  .description('Add reflection entry to capture learning and adaptations')
+  .option('--goal <goal>', 'Specify the goal slug')
+  .option('--notes <text>', 'Reflection notes')
+  .action(reflectCommand);
+
+program
+  .command('summarize')
+  .description('Generate or update knowledge summary for the goal')
+  .option('--goal <goal>', 'Specify the goal slug')
+  .action(summarizeCommand);
 
 // Error handling
 program.exitOverride();

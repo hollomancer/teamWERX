@@ -1,7 +1,7 @@
 ---
 teamwerx:
   version: "1.0.0"
-  initialized: "2025-10-25"
+  initialized: "{{ INITIALIZED_DATE }}"
 ---
 
 
@@ -12,9 +12,9 @@ AI agents: Use teamWERX commands to coordinate goal-based development with the d
 ## Workspace Architecture
 
 All goals have a numbered workspace under `.teamwerx/goals/<number>-<slug>/` containing:
-- `discuss.md` - Discussion log with numbered entries (D01, D02, ...) and reflections (R01, R02, ...)
+- `discuss.md` - Discussion log with numbered entries (D01, D02, ...)
 - `plan.md` - Task plan with numbered tasks (T01, T02, ...)
-- `research.md` - Research report with tech stack, business context, and project insights
+- `research.md` - Research report with tech stack and project insights
 - `implementation/` - Implementation records (T01.md, T02.md, ...)
 - `summary.md` - Knowledge summary (optional, created with `teamwerx summarize`)
 
