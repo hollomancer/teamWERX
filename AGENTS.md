@@ -1,6 +1,18 @@
+---
+teamwerx:
+  version: "1.0.0"
+  projectName: "teamWERX"
+  initialized: "2025-10-25T12:00:00Z"
+  defaultGoalStatus: "draft"
+  git:
+    enabled: true
+    autoCommit: false
+    commitPrefix: "[teamWERX]"
+---
+
 # AGENTS.md
 
-This file provides instructions for AI agents on how to use the `teamWERX` tool.
+This file provides instructions for AI agents on how to use the `teamWERX` tool and contains the teamWERX configuration in the YAML frontmatter above.
 
 ## Overview
 

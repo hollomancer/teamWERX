@@ -17,13 +17,15 @@ teamWERX will be built as a command-line interface (CLI) tool using Node.js. It 
 
 ## Workflow
 
-The teamWERX workflow is divided into four main phases:
+The teamWERX workflow is divided into four main phases. Multiple goals can progress through these phases concurrently, allowing teams to work on different features or projects in parallel.
 
 1.  **Goal Setting:** The team defines the high-level goals for the project or feature.
 2.  **Research and Discussion:** The team and their AI assistants research the existing codebase, discuss potential implementation strategies, and refine the requirements.
 3.  **Planning:** Based on the research and discussion, a detailed implementation plan is created.
 4.  **Execution:** The plan is executed by the development team and their AI assistants.
 5.  **Change Management:** The team can propose and track changes to goals and plans throughout the development process.
+
+**Note:** These phases are per-goal, meaning different goals can be in different phases simultaneously. For example, one goal might be in the Execution phase while another is still in Research and Discussion.
 
 ### 1. Goal Setting
 
@@ -66,9 +68,33 @@ This phase is focused on managing changes to goals and plans.
 
 ## Commands
 
+### Initialization
+
+*   `/teamwerx.init`: Initializes teamWERX in the current project. This command:
+    *   Verifies that the current directory is a git repository (fails if not)
+    *   Creates the `.teamwerx` directory structure
+    *   Creates template directories for goals, research, plans, proposals, and deltas
+    *   Creates or updates `AGENTS.md` with teamWERX configuration in YAML frontmatter
+    *   Outputs a success message with next steps
+
+**Prerequisites:**
+*   The project must be initialized as a git repository (`git init` must have been run)
+*   The command must be run from the project root directory
+
+**Error Handling:**
+*   If git is not initialized, the command will display: "Error: teamWERX requires a git repository. Please run 'git init' first."
+*   If `.teamwerx` already exists, the command will ask: "teamWERX is already initialized. Do you want to reinitialize? (y/n)"
+*   If `AGENTS.md` already exists, the command will preserve existing content and add/update only the frontmatter configuration
+
 ### Goal Setting
 
 *   `/teamwerx.goal [goal description]`: Creates a new goal and prompts for success criteria. The description is a string that describes the goal.
+
+### Goal Management
+
+*   `/teamwerx.list [--status=<status>] [--owner=<owner>]`: Lists all goals in the project with optional filtering by status or owner.
+*   `/teamwerx.status [goal-name]`: Shows detailed status of a specific goal, or all goals if no name is provided.
+*   `/teamwerx.use [goal-name]`: Sets the current working goal context for subsequent commands.
 
 ### Research and Discussion
 
@@ -88,7 +114,21 @@ This phase is focused on managing changes to goals and plans.
 
 ## Project Structure
 
-teamWERX will create a `.teamwerx` directory in the root of the project to store its artifacts. The directory structure will be as follows:
+teamWERX uses two main locations for its files:
+
+1. **Project Root**: Contains `AGENTS.md` (configuration and agent instructions)
+2. **`.teamwerx` Directory**: Contains all artifacts (goals, plans, research, etc.)
+
+### Root Level
+```
+project-root/
+├── AGENTS.md          # Configuration + AI agent instructions
+└── .teamwerx/         # teamWERX artifacts directory
+```
+
+### `.teamwerx` Directory Structure
+
+The `.teamwerx` directory is created in the root of the project to store all teamWERX artifacts:
 
 ```
 .teamwerx/
@@ -102,31 +142,286 @@ teamWERX will create a `.teamwerx` directory in the root of the project to store
 │   └── goal-2/
 │       ├── report.md
 │       └── discussion.md
-└── plans/
-    ├── goal-1.md
-    └── goal-2.md
+├── plans/
+│   ├── goal-1.md
+│   └── goal-2.md
 ├── proposals/
 │   ├── goal-1/
 │   │   ├── proposal-1.md
 │   │   └── proposal-2.md
 │   └── goal-2/
 │       └── proposal-1.md
-└── deltas/
-    ├── goal-1/
-    │   ├── delta-1.md
-    │   └── delta-2.md
-    └── goal-2/
-        └── delta-1.md
+├── deltas/
+│   ├── goal-1/
+│   │   ├── delta-1.md
+│   │   └── delta-2.md
+│   └── goal-2/
+│       └── delta-1.md
+└── .current-goal
 ```
 *   `goals/`: Contains the markdown files for each goal.
 *   `research/`: Contains the research reports and discussion transcripts for each goal.
 *   `plans/`: Contains the implementation plans for each goal.
+*   `proposals/`: Contains change proposals for goals and plans.
+*   `deltas/`: Contains version comparison reports.
+*   `.current-goal`: Tracks the currently active goal (simple text file).
+
+### Configuration
+
+teamWERX configuration is stored in the `AGENTS.md` file at the project root. This file serves both as documentation for AI agents and as the configuration source for teamWERX behavior. By consolidating configuration into a human-readable markdown file, it ensures that team members and AI agents have a single source of truth.
+
+**Location**: `AGENTS.md` (project root)
+
+The configuration is defined using YAML frontmatter at the top of the AGENTS.md file:
+
+```yaml
+---
+teamwerx:
+  version: "1.0.0"
+  projectName: "My Project"
+  initialized: "2025-10-25T12:00:00Z"
+  defaultGoalStatus: "draft"
+  git:
+    enabled: true
+    autoCommit: false
+    commitPrefix: "[teamWERX]"
+---
+```
+
+**Configuration Fields:**
+*   `version`: teamWERX specification version
+*   `projectName`: Human-readable name for the project
+*   `initialized`: ISO 8601 timestamp of when teamWERX was initialized
+*   `defaultGoalStatus`: Default status for newly created goals (typically "draft")
+*   `git.enabled`: Whether git integration is enabled (always true)
+*   `git.autoCommit`: Whether to automatically commit changes (always false)
+*   `git.commitPrefix`: Prefix for teamWERX-related commit messages
 
 ## Goals vs. Plans
 
 A **goal** is a high-level, aspirational statement of what the project is trying to achieve. It's the "what" and the "why". It should be concise and easy to understand. A goal also has success criteria, which are used to determine whether the goal has been achieved.
 
 A **plan** is a detailed, step-by-step description of how to achieve a goal. It's the "how". It should be a series of actionable tasks. A plan is generated from a goal through a process of research and discussion.
+
+## Versioning Strategy
+
+teamWERX uses git as its versioning system for all artifacts. This provides a robust, industry-standard approach to tracking changes and enables powerful version comparison capabilities.
+
+### Version Tracking
+
+*   **All artifacts are tracked in git**: Goals, plans, research reports, and proposals are stored in the `.teamwerx` directory and should be committed to git.
+*   **Manual commits**: Users are responsible for committing changes to the `.teamwerx` directory. teamWERX does not auto-commit changes.
+*   **Commit message convention**: It is recommended to prefix teamWERX-related commits with `[teamWERX]` for easy identification (e.g., `[teamWERX] Add new authentication goal`).
+
+### Version References
+
+*   **Git commit SHAs**: Versions are referenced using git commit SHAs (e.g., `a1b2c3d`).
+*   **Git tags**: For major milestones, git tags can be used (e.g., `v1.0.0`, `goal-auth-complete`).
+*   **Branch-based workflows**: Teams can use git branches for experimental goals or proposals.
+
+### Delta Computation
+
+The `/teamwerx.delta` command uses git to compute differences between versions:
+
+*   **Command syntax**: `/teamwerx.delta <artifact-path> <version1> <version2>`
+*   **Implementation**: Uses `git diff <version1> <version2> -- <artifact-path>` internally
+*   **Output**: Displays a unified diff showing additions, deletions, and modifications
+*   **Version formats supported**:
+    *   Commit SHAs: `a1b2c3d` or full SHA
+    *   Relative references: `HEAD`, `HEAD~1`, `HEAD~2`
+    *   Tags: `v1.0.0`, `milestone-1`
+    *   Branches: `main`, `feature/new-auth`
+
+### Version History
+
+Users can view the history of any artifact using standard git commands:
+
+```bash
+# View commit history for a specific goal
+git log -- .teamwerx/goals/implement-login.md
+
+# View changes in a specific commit
+git show a1b2c3d:.teamwerx/goals/implement-login.md
+
+# View diff between two commits
+git diff HEAD~2 HEAD -- .teamwerx/goals/implement-login.md
+```
+
+### Best Practices
+
+*   **Commit after each major change**: After creating or updating a goal, plan, or proposal, commit the changes.
+*   **Use descriptive commit messages**: Clearly describe what changed and why.
+*   **Tag important milestones**: Use git tags to mark significant points in the project lifecycle.
+*   **Create branches for experiments**: Use git branches to explore alternative approaches without affecting the main workflow.
+
+## Goal State Management
+
+Goals in teamWERX progress through a defined set of states during their lifecycle. Understanding these states and their transitions helps teams track progress and manage their workflow effectively.
+
+### Goal States
+
+*   **draft**: Initial state when a goal is created but not yet ready for work. The goal may still be under discussion or refinement.
+*   **open**: The goal is defined and ready to be worked on, but work has not yet started.
+*   **in-progress**: Active work is being done on the goal.
+*   **blocked**: Work on the goal is temporarily halted due to dependencies, issues, or other impediments.
+*   **completed**: The goal has been achieved and all success criteria have been met.
+*   **cancelled**: The goal has been abandoned and will not be completed.
+
+### State Transitions
+
+The following diagram shows the valid state transitions:
+
+```
+   draft ──────> open ──────> in-progress ──────> completed
+     │            │               │
+     │            │               │
+     │            │               ▼
+     │            │            blocked
+     │            │               │
+     │            │               │
+     └────────────┴───────────────┴──────────> cancelled
+```
+
+**Valid Transitions:**
+
+*   `draft` → `open`: Goal is finalized and ready for work
+*   `draft` → `cancelled`: Goal is discarded during planning
+*   `open` → `in-progress`: Work begins on the goal
+*   `open` → `cancelled`: Goal is deprioritized before work starts
+*   `in-progress` → `blocked`: Work is halted due to impediments
+*   `in-progress` → `completed`: Goal's success criteria are met
+*   `in-progress` → `cancelled`: Goal is abandoned during implementation
+*   `blocked` → `in-progress`: Impediments are resolved and work resumes
+*   `blocked` → `cancelled`: Goal cannot be unblocked and is abandoned
+
+### Triggering State Changes
+
+State changes can be triggered through:
+
+1. **Manual updates**: Users can edit the goal's frontmatter to change the `status` field
+2. **Command-based transitions**: Future commands like `/teamwerx.start`, `/teamwerx.block`, `/teamwerx.complete`, `/teamwerx.cancel`
+3. **Automated transitions**: When certain actions occur (e.g., executing a plan might change state to `in-progress`)
+
+### State Change Tracking
+
+Since all artifacts are tracked in git:
+
+*   Each state change should be committed with a descriptive message
+*   State history can be viewed using `git log` on the goal file
+*   State changes can be audited and potentially reverted if needed
+
+**Example commit messages:**
+```
+[teamWERX] Move 'implement-auth' goal to in-progress
+[teamWERX] Block 'add-payment' goal - waiting for API credentials
+[teamWERX] Complete 'setup-database' goal - all criteria met
+```
+
+## Managing Concurrent Goals
+
+teamWERX is designed to support multiple goals being worked on simultaneously. This enables teams to manage complex projects with parallel workstreams and multiple priorities.
+
+### Multiple Goals Support
+
+*   **Unlimited concurrent goals**: There is no limit to the number of goals that can exist in a project
+*   **Independent workflows**: Each goal has its own research, discussion, plans, and proposals
+*   **Parallel development**: Different team members can work on different goals simultaneously
+*   **Cross-goal visibility**: All goals are visible to all team members
+
+### Goal Identification
+
+Goals are identified by their filename in the `.teamwerx/goals/` directory:
+
+*   **File naming**: Goal files use kebab-case naming derived from the title (e.g., `implement-new-login-page.md`)
+*   **Unique identifiers**: Each goal file must have a unique filename
+*   **Referencing goals**: Goals are referenced by their filename without the `.md` extension
+
+### Listing and Filtering Goals
+
+To help manage multiple goals, teamWERX provides commands to list and filter goals:
+
+*   `/teamwerx.list`: Lists all goals in the project
+    *   Displays: title, status, owner, created date
+    *   Sortable by: status, created date, owner
+    *   Filterable by: status, owner
+
+*   `/teamwerx.status [goal-name]`: Shows detailed status of a specific goal or all goals if no name is provided
+    *   Displays: full goal details, current plan status, recent activity
+    *   Shows: state, progress, blockers, next steps
+
+**Example output:**
+```
+Active Goals:
+┌─────────────────────────────┬──────────────┬──────────┬────────────┐
+│ Title                       │ Status       │ Owner    │ Created    │
+├─────────────────────────────┼──────────────┼──────────┼────────────┤
+│ Implement new login page    │ in-progress  │ alice    │ 2025-10-15 │
+│ Add payment integration     │ blocked      │ bob      │ 2025-10-18 │
+│ Refactor database layer     │ open         │ charlie  │ 2025-10-20 │
+│ Update user documentation   │ draft        │ diana    │ 2025-10-22 │
+└─────────────────────────────┴──────────────┴──────────┴────────────┘
+```
+
+### Working Context
+
+When working with multiple goals, teamWERX uses the following context resolution:
+
+1. **Explicit goal reference**: Commands can explicitly reference a goal using its identifier
+   *   Example: `/teamwerx.research implement-login`
+
+2. **Current working goal**: If no goal is specified, commands operate on the "current" goal
+   *   Set with: `/teamwerx.use [goal-name]`
+   *   Shown in: Status display and command prompts
+   *   Persisted in: `.teamwerx/.current-goal`
+
+3. **Automatic context**: Some commands can infer the goal from context
+   *   Example: When executing a plan, the goal is derived from the plan file
+
+### Multi-Goal Workflows
+
+**Scenario 1: Team with parallel features**
+```bash
+# Alice works on authentication
+/teamwerx.use implement-auth
+/teamwerx.research
+/teamwerx.plan
+
+# Bob works on payments (simultaneously)
+/teamwerx.use add-payment-integration
+/teamwerx.research
+/teamwerx.plan
+```
+
+**Scenario 2: Dependent goals**
+```yaml
+# In goal: add-payment-integration
+---
+title: Add payment integration
+status: blocked
+dependencies:
+  - implement-auth  # Must complete first
+---
+```
+
+**Scenario 3: Bulk status review**
+```bash
+# View all goals at once
+/teamwerx.list
+
+# Filter to see only blocked items
+/teamwerx.list --status=blocked
+
+# See goals by specific owner
+/teamwerx.list --owner=alice
+```
+
+### Best Practices for Multiple Goals
+
+*   **Use clear, distinctive names**: Avoid similar goal names that could cause confusion
+*   **Track dependencies**: Document when goals depend on each other
+*   **Regular status reviews**: Periodically review all goals using `/teamwerx.list`
+*   **Archive completed goals**: Move completed goals to a `.teamwerx/archive/` directory
+*   **Limit active work**: While you can have many goals, limit how many are in `in-progress` state simultaneously
 
 ## Proposal Workflow
 
@@ -143,13 +438,28 @@ The following is a recommended workflow for managing proposals:
 
 ## AI Integration
 
-teamWERX will integrate with AI coding assistants through a system of prompts and responses. The CLI will send prompts to the AI assistant based on the command being executed, and the AI assistant will respond with text, code, or other data.
+teamWERX integrates with AI coding assistants through the `AGENTS.md` file, which serves dual purposes:
 
-For example, when the `/teamwerx.research` command is executed, the CLI will send a prompt to the AI assistant asking it to analyze the codebase and generate a research report. The AI assistant will then respond with a markdown-formatted report, which the CLI will save to the `.teamwerx/research` directory.
+1. **Configuration Source**: Contains teamWERX settings in YAML frontmatter
+2. **Agent Instructions**: Provides detailed instructions for AI agents on how to use teamWERX commands
+
+This approach ensures that AI agents have immediate access to both the configuration and the operational instructions in a single, human-readable file.
+
+### How It Works
+
+*   **AI-Agnostic Design**: teamWERX does not directly call AI APIs. Instead, it relies on the AI coding assistant to read `AGENTS.md` and understand how to interact with teamWERX commands.
+*   **Context Provision**: When a teamWERX command is executed, the AI agent reads the relevant section of `AGENTS.md` to understand what actions to take.
+*   **Prompt-Based Interaction**: The CLI outputs prompts and information that the AI agent can process and respond to appropriately.
+
+For example, when the `/teamwerx.research` command is executed, the AI agent:
+1. Reads the `/teamwerx.research` section in `AGENTS.md`
+2. Analyzes the codebase as instructed
+3. Generates a markdown-formatted research report
+4. Saves the report to the `.teamwerx/research` directory
 
 ## Agent Instructions
 
-AI agents should be instructed to use the `teamWERX` tool to guide the development process. The `AGENTS.md` file provides detailed instructions for AI agents on how to use each command. The following is a high-level overview of how an AI agent should interact with the `teamWERX` tool:
+The `AGENTS.md` file at the project root provides detailed instructions for AI agents on how to use the `teamWERX` tool. This file is the single source of truth for both configuration and operational guidance. The following is a high-level overview of how an AI agent should interact with the `teamWERX` tool:
 
 *   **Goal Setting:** The AI agent should assist the user in creating a clear and concise goal with measurable success criteria.
 *   **Research and Discussion:** The AI agent should use the `/teamwerx.research` command to analyze the codebase and provide a summary of the existing implementation. The AI agent should also participate in the discussion by proposing different approaches and providing feedback on the user's suggestions.
@@ -174,8 +484,10 @@ To make the artifacts more machine-readable and to ensure consistency, the markd
 ```yaml
 ---
 title: Implement a new login page
-status: open
+status: open  # draft, open, in-progress, blocked, completed, or cancelled
 owner: conradhollomon
+created: 2025-10-25
+updated: 2025-10-25
 success_criteria:
   - The user can log in with their email and password.
   - The user is redirected to the dashboard after a successful login.
@@ -185,6 +497,14 @@ success_criteria:
 
 ...
 ```
+
+**Field Descriptions:**
+*   `title`: Brief, descriptive name for the goal
+*   `status`: Current state (see Goal State Management section for valid states)
+*   `owner`: Primary person responsible for the goal
+*   `created`: ISO 8601 timestamp when the goal was created
+*   `updated`: ISO 8601 timestamp of the last update
+*   `success_criteria`: List of measurable outcomes that define success
 
 ### Plan Schema
 
