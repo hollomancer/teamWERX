@@ -14,17 +14,17 @@ AI agents: Use teamWERX commands to coordinate goal-based development with the d
 ### `/teamwerx.goal [description]`
 Create a new goal. Prompt for success criteria. Save to `.teamwerx/goals/[kebab-case-title].md` with YAML frontmatter (title, status: draft, created, success_criteria).
 
-### `/teamwerx.research`
-**One-time codebase analysis.** Analyze existing codebase for current goal. Identify relevant files/functions/patterns. Save structured report to `.teamwerx/research/[goal-name]/report.md`.
+### `/teamwerx.research [goal-name] [--note <text>] [--file <path>] [--url <url>]`
+**Session-based analysis.** Analyze the current goal (or supplied artifact such as a plan/proposal), search the web when allowed, and incorporate any supplemental context passed through `--note`, `--file`, or `--url`. Each invocation creates `.teamwerx/research/[artifact]/session-<timestamp>/`; store `report.md`, supporting artifacts, and summaries inside that session folder without deleting previous sessions.
 
 ### `/teamwerx.discuss [message]`
-**Iterative conversation.** Respond to developer's message about implementation approach. Can be called multiple times. Append to `.teamwerx/research/[goal-name]/discussion.md`.
+**Iterative conversation.** Respond to developer messages about implementation approach. Append timestamped entries to `.teamwerx/research/[artifact]/discussion.md` (never overwrite existing discussion). Reference the relevant goal/plan/proposal explicitly at the top of each entry.
 
 ### `/teamwerx.dry-run`
 Simulate current plan to identify potential issues. Provide feedback before execution.
 
 ### `/teamwerx.plan`
-Generate task list from research/discussion. Save to `.teamwerx/plans/[goal-name].md` with YAML frontmatter (goal, status, tasks array with id, description, status).
+Generate task list from accumulated research/discussion. Update `.teamwerx/plans/[goal-name].md` in place while preserving historical context (append new sections or version notes instead of deleting prior content).
 
 ### `/teamwerx.execute [task-id]`
 Execute specific task or next pending task from plan. Flow:
@@ -36,12 +36,6 @@ If no task-id: execute next pending task.
 
 ### `/teamwerx.propose [description]`
 Propose change to goal/plan. Save to `.teamwerx/proposals/[goal-name]/[proposal-id].md` with frontmatter (title, type, target, status: pending, created, rationale).
-
-### `/teamwerx.approve [proposal-id]`
-Approve proposal. Update status to approved, apply changes to target goal/plan, archive proposal, prompt commit.
-
-### `/teamwerx.reject [proposal-id] [reason]`
-Reject proposal. Update status to rejected, add reason, archive proposal, prompt commit. Do not modify target.
 
 ### `/teamwerx.list [--status=<status>]`
 List all goals. Filter by status if specified. Display title, status, created date.
@@ -58,3 +52,4 @@ Set current working goal context. Store in `.teamwerx/.current-goal`.
 - File naming: kebab-case
 - Task statuses: pending | in-progress | completed
 - Goal statuses: draft | open | in-progress | blocked | completed | cancelled
+- All commands are **non-destructive**: append to logs, create new session folders, or add addenda instead of overwriting artifacts. Use git history for changes that must replace existing content.

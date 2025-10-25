@@ -10,6 +10,13 @@ const { program } = require('commander');
 const chalk = require('chalk');
 const packageJson = require('../package.json');
 
+const collectValues = (value, previous) => {
+  if (Array.isArray(previous)) {
+    return previous.concat([value]);
+  }
+  return [value];
+};
+
 // Import commands
 const initCommand = require('../lib/commands/init');
 const goalCommand = require('../lib/commands/goal');
@@ -59,6 +66,9 @@ program
 program
   .command('research [goal-name]')
   .description('Analyze the codebase and generate a research report')
+  .option('--note <text>', 'Add supplemental notes for the research session', collectValues, [])
+  .option('--file <path>', 'Attach a supporting file (repeatable)', collectValues, [])
+  .option('--url <url>', 'Reference a URL for additional context', collectValues, [])
   .action(researchCommand);
 
 program

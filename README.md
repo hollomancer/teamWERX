@@ -65,15 +65,15 @@ npm install --save-dev teamwerx
 
 These commands are designed to be used with AI agents:
 
-- `teamwerx research [goal-name]` - Analyze codebase and generate research report
-- `teamwerx discuss <message>` - Continue structured discussion
+- `teamwerx research [goal-name] [--note <text>] [--file <path>] [--url <url>]` - Analyze the codebase, search the web, and capture supplemental context in a new session folder so previous research is never overwritten
+- `teamwerx discuss <message>` - Continue structured discussion; append timestamped entries instead of replacing existing logs
 - `teamwerx dry-run` - Simulate plan execution
-- `teamwerx plan [goal-name]` - Generate implementation plan
+- `teamwerx plan [goal-name]` - Generate implementation plan while preserving historical context in the plan file
 - `teamwerx execute [goal-name]` - Execute the plan
 
 ### Change Management
 
-- `teamwerx propose <description>` - Propose a change
+- `teamwerx propose <description>` - Propose a change; review outcomes manually by updating the proposal file’s `status`/`rationale`
 
 ## Project Structure
 
@@ -84,11 +84,12 @@ project-root/
 ├── AGENTS.md              # Configuration + AI agent instructions
 └── .teamwerx/
     ├── goals/             # Goal definitions
-    ├── research/          # Research reports and discussions
+    ├── research/          # Discussion logs + timestamped research sessions (with inputs and reports)
     ├── plans/             # Implementation plans
     ├── proposals/         # Change proposals
     └── .current-goal      # Current working goal
 ```
+Each `research/<artifact>/` directory keeps a rolling `discussion.md` plus one `session-<timestamp>/` subdirectory per research command invocation so older analyses remain intact.
 
 ## Working with AI Agents
 
@@ -122,6 +123,7 @@ Goals progress through the following states:
 3. **Clear success criteria**: Define measurable outcomes for each goal
 
 4. **Regular status reviews**: Use `teamwerx status` to review progress
+5. **Preserve history**: Treat AI-generated artifacts as append-only—create new research sessions and append to discussions instead of overwriting existing context
 
 ## Configuration
 

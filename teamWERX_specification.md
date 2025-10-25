@@ -85,19 +85,21 @@ graph TD
 
 These two commands serve distinct purposes in the workflow:
 
-**`/teamwerx.research`** - Initial Codebase Analysis
-*   **Purpose**: One-time analysis of the existing codebase for the current goal
-*   **When**: Execute once after creating a goal, before planning
-*   **Output**: Structured report in `.teamwerx/research/[goal]/report.md`
-*   **AI Action**: Read and analyze codebase, identify relevant files/functions/patterns, document findings
+**`/teamwerx.research [goal-name] [--note <text>] [--file <path>] [--url <url>]`** - Session-Based Analysis
+*   **Purpose**: Capture deep understanding of the codebase and surrounding context for a goal/plan/proposal without overwriting prior research.
+*   **When**: Execute once after creating a goal and again whenever fresh findings are required. Every invocation creates a new session.
+*   **Output**: Structured artifacts in `.teamwerx/research/[artifact]/session-<timestamp>/` (e.g., `report.md`, additional files, session notes).
+*   **AI Action**: Read and analyze the codebase, search the web for current guidance (when network access is available), ingest any supplemental notes/files/URLs passed through the CLI flags, identify relevant files/functions/patterns, and document findings inside the session directory.
 *   **Example**: "Analyze the existing authentication system and identify integration points"
 
 **`/teamwerx.discuss [message]`** - Iterative Conversation
 *   **Purpose**: Multi-round conversation to refine implementation approach
 *   **When**: After research, potentially multiple times before planning
-*   **Output**: Appends to `.teamwerx/research/[goal]/discussion.md`
+*   **Output**: Appends to `.teamwerx/research/[artifact]/discussion.md` (defaults to the current goal)
 *   **AI Action**: Respond to developer's questions, propose alternatives, provide feedback
 *   **Example**: `/teamwerx.discuss "Should we use JWT or session-based auth?"`
+
+Both commands conceptually apply to any artifact that needs collaborative analysis—not only active goals. When an AI agent needs to explore a downstream plan or a proposal, they should still invoke the appropriate command but capture the output inside a dedicated `.teamwerx/research/[artifact-id]/` folder (and clearly state which artifact is being discussed) so that context stays grouped. `/teamwerx.research` may include supplementary sources (URLs, documents, raw text) appended by the developer; the CLI copies those attachments into the session’s `inputs/` directory, and agents must ingest them alongside their own web searches so findings reflect all supplied material.
 
 **Recommended Flow:**
 ```bash
@@ -110,6 +112,8 @@ teamwerx plan                                  # Generate implementation plan
 ```
 
 ## Commands
+
+All AI-facing commands are **non-destructive**. Instead of overwriting existing artifacts, they append new entries, create timestamped session folders, or add addenda so prior context remains available in git history.
 
 ### Initialization
 
@@ -141,56 +145,13 @@ teamwerx plan                                  # Generate implementation plan
 
 ### Research and Discussion
 
-*   `/teamwerx.research`: Analyzes the codebase and generates a research report, identifying relevant files, functions, and classes.
-*   `/teamwerx.discuss [your message]`: Facilitates a structured discussion. The message is a string that contains your message.
+*   `/teamwerx.research [goal-name] [--note <text>] [--file <path>] [--url <url>]`: Analyzes the codebase, searches the web for supporting information, and stores any supplemental resources (links, files, pasted text) provided with the command. Each invocation creates a new session folder under `.teamwerx/research/[artifact]/session-<timestamp>/` so prior research is preserved.
+*   `/teamwerx.discuss <message>`: Facilitates a structured discussion. Mention which goal, plan, or proposal the conversation concerns and append timestamped entries to the matching research subdirectory instead of overwriting existing discussion.
 *   `/teamwerx.dry-run`: Simulates the implementation plan to identify potential issues before execution.
 
 ### Change Management
 
-*   `/teamwerx.propose [description]`: Propose a change to a goal or plan. The description is a string that describes the proposed change.
-
-*   `/teamwerx.approve [proposal-id]`: Approve a proposal and merge its changes.
-    *   Updates proposal status to `approved`
-    *   Applies proposed changes to the target goal or plan
-    *   Archives the proposal for reference
-    *   Prompts developer to commit changes
-
-**Example:**
-```bash
-$ teamwerx approve add-oauth-to-login
-
-Approving proposal: add-oauth-to-login
-Target: .teamwerx/goals/implement-login.md
-
-Changes applied:
-  - Added OAuth dependency to success criteria
-  - Updated goal description
-
-Proposal approved and archived.
-Commit changes:
-  git add .teamwerx/goals/implement-login.md .teamwerx/proposals/
-  git commit -m "[teamWERX] Approve proposal: add OAuth to login"
-```
-
-*   `/teamwerx.reject [proposal-id] [reason]`: Reject a proposal.
-    *   Updates proposal status to `rejected`
-    *   Adds rejection rationale to the proposal
-    *   Archives the proposal for future reference
-    *   Does not modify the target goal or plan
-
-**Example:**
-```bash
-$ teamwerx reject add-oauth-to-login "OAuth adds too much complexity for MVP"
-
-Rejecting proposal: add-oauth-to-login
-Reason: OAuth adds too much complexity for MVP
-
-Proposal rejected and archived.
-Commit changes:
-  git add .teamwerx/proposals/
-  git commit -m "[teamWERX] Reject proposal: add OAuth to login"
-```
-
+*   `/teamwerx.propose [description]`: Propose a change to a goal or plan. The description is a string that describes the proposed change. Proposals are reviewed manually—update the proposal file’s `status` (e.g., `approved`, `rejected`) and rationale directly once a decision is made.
 *   `/teamwerx.plan`: Generates a task list based on the research and discussion.
 
 ### Execution
@@ -262,11 +223,18 @@ The `.teamwerx` directory is created in the root of the project to store all tea
 │   └── goal-2.md
 ├── research/
 │   ├── goal-1/
-│   │   ├── report.md
-│   │   └── discussion.md
+│   │   ├── discussion.md
+│   │   ├── session-2025-01-15T10-10-10-000Z/
+│   │   │   ├── inputs/
+│   │   │   │   └── note-2025-01-15.md
+│   │   │   └── report.md
+│   │   └── session-2025-01-20T14-05-30-000Z/
+│   │       ├── inputs/
+│   │       └── report.md
 │   └── goal-2/
-│       ├── report.md
-│       └── discussion.md
+│       ├── discussion.md
+│       └── session-2025-02-01T09-00-00-000Z/
+│           └── report.md
 ├── plans/
 │   ├── goal-1.md
 │   └── goal-2.md
@@ -279,7 +247,7 @@ The `.teamwerx` directory is created in the root of the project to store all tea
 └── .current-goal
 ```
 *   `goals/`: Contains the markdown files for each goal.
-*   `research/`: Contains the research reports and discussion transcripts for each goal.
+*   `research/`: Contains discussion logs plus timestamped session folders (with reports, inputs, URLs, etc.). Each goal, plan, or proposal gets its own subdirectory (e.g., `research/goal-1/`, `research/goal-1-plan/`, `research/goal-1-proposal-2/`).
 *   `plans/`: Contains the implementation plans for each goal.
 *   `proposals/`: Contains change proposals for goals and plans.
 *   `.current-goal`: Tracks the currently active goal (simple text file).
@@ -372,9 +340,9 @@ The following is a recommended workflow for managing proposals:
 1.  A user creates a proposal using the `/teamwerx.propose` command.
 2.  The proposal is saved as a markdown file in the `.teamwerx/proposals` directory with a status of "pending".
 3.  Other users can then review the proposal and provide feedback in the discussion thread.
-4.  Once the discussion is complete, a user with the appropriate permissions can approve or reject the proposal using the `/teamwerx.approve` or `/teamwerx.reject` commands.
-5.  If the proposal is approved, the changes are automatically merged into the corresponding goal or plan.
-6.  If the proposal is rejected, the proposal is archived for future reference.
+4.  Once the discussion is complete, the developer (or designated reviewer) updates the proposal file directly, setting `status` to `approved` or `rejected` and documenting the rationale.
+5.  If the proposal is approved, apply the changes to the corresponding goal or plan, then archive the proposal for reference.
+6.  If the proposal is rejected, archive the proposal (with the rejection rationale) for future reference.
 
 ## Archiving
 
@@ -454,7 +422,7 @@ teamwerx list
 
 **Change Management:**
 ```bash
-teamwerx propose "..." → teamwerx approve <id> → teamwerx plan
+teamwerx propose "..." → review & update proposal status manually → teamwerx plan
 ```
 
 ## Best Practices
