@@ -91,6 +91,8 @@ project-root/
 ```
 Each `research/<artifact>/` directory keeps a rolling `discussion.md` plus one `session-<timestamp>/` subdirectory per research command invocation so older analyses remain intact.
 
+The CLI source includes reusable templates (e.g., AGENTS.md) under `assets/templates/`, mirroring the template-driven architecture used in OpenSpec.
+
 ## Working with AI Agents
 
 teamWERX is designed to work seamlessly with AI coding assistants. The `AGENTS.md` file provides instructions that AI agents can read and follow.
