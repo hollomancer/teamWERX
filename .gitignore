@@ -1,6 +1,5 @@
 # teamWERX - Session and temporary files
 .teamwerx/.current-goal
-.teamwerx/deltas/
 .teamwerx/.temp/
 
 # Dependencies

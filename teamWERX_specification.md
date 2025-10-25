@@ -116,7 +116,7 @@ teamwerx plan                                  # Generate implementation plan
 *   `/teamwerx.init`: Initializes teamWERX in the current project. This command:
     *   Verifies that the current directory is a git repository (fails if not)
     *   Creates the `.teamwerx` directory structure
-    *   Creates template directories for goals, research, plans, proposals, and deltas
+    *   Creates template directories for goals, research, plans, and proposals
     *   Creates or updates `AGENTS.md` with teamWERX configuration in YAML frontmatter
     *   Outputs a success message with next steps
 
@@ -148,7 +148,6 @@ teamwerx plan                                  # Generate implementation plan
 ### Change Management
 
 *   `/teamwerx.propose [description]`: Propose a change to a goal or plan. The description is a string that describes the proposed change.
-*   `/teamwerx.delta [artifact-path] [version1] [version2]`: View the changes between different versions of a goal or plan using git diff.
 
 *   `/teamwerx.approve [proposal-id]`: Approve a proposal and merge its changes.
     *   Updates proposal status to `approved`
@@ -277,19 +276,12 @@ The `.teamwerx` directory is created in the root of the project to store all tea
 │   │   └── proposal-2.md
 │   └── goal-2/
 │       └── proposal-1.md
-├── deltas/
-│   ├── goal-1/
-│   │   ├── delta-1.md
-│   │   └── delta-2.md
-│   └── goal-2/
-│       └── delta-1.md
 └── .current-goal
 ```
 *   `goals/`: Contains the markdown files for each goal.
 *   `research/`: Contains the research reports and discussion transcripts for each goal.
 *   `plans/`: Contains the implementation plans for each goal.
 *   `proposals/`: Contains change proposals for goals and plans.
-*   `deltas/`: Contains version comparison reports.
 *   `.current-goal`: Tracks the currently active goal (simple text file).
 
 ### Configuration
@@ -330,11 +322,9 @@ teamWERX uses git-based versioning for all artifacts. Manual commits with `[team
 
 **Version references:** Commit SHAs, tags, or branches (e.g., `a1b2c3d`, `v1.0.0`, `HEAD~1`)
 
-**Delta computation:** `/teamwerx.delta <artifact-path> <version1> <version2>` uses `git diff` internally
-
 **Git workflow:**
 - Commit: `.teamwerx/goals/`, `.teamwerx/plans/`, `.teamwerx/research/`, `.teamwerx/proposals/`, `AGENTS.md`
-- Ignore: `.teamwerx/.current-goal`, `.teamwerx/deltas/`, `.teamwerx/.temp/` (see .gitignore)
+- Ignore: `.teamwerx/.current-goal`, `.teamwerx/.temp/` (see .gitignore)
 
 ## Goal State Management
 

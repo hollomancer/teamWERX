@@ -22,7 +22,6 @@ const dryRunCommand = require('../lib/commands/dry-run');
 const planCommand = require('../lib/commands/plan');
 const executeCommand = require('../lib/commands/execute');
 const proposeCommand = require('../lib/commands/propose');
-const deltaCommand = require('../lib/commands/delta');
 
 // Configure CLI
 program
@@ -86,11 +85,6 @@ program
   .command('propose <description>')
   .description('Propose a change to a goal or plan')
   .action(proposeCommand);
-
-program
-  .command('delta <artifact-path> <version1> <version2>')
-  .description('View changes between different versions of a goal or plan')
-  .action(deltaCommand);
 
 // Error handling
 program.exitOverride();
