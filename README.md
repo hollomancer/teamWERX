@@ -74,6 +74,7 @@ These commands are designed to be used with AI agents:
 ### Change Management
 
 - `teamwerx propose <description>` - Propose a change; review outcomes manually by updating the proposal file’s `status`/`rationale`
+- `teamwerx archive [goal-name] [--yes]` - Move a completed goal (and its plan/research/proposals) into `.teamwerx/archive/` to keep the workspace focused
 
 ## Project Structure
 
@@ -87,6 +88,11 @@ project-root/
     ├── research/          # Discussion logs + timestamped research sessions (with inputs and reports)
     ├── plans/             # Implementation plans
     ├── proposals/         # Change proposals
+    ├── archive/           # Archived artifacts
+    │   ├── goals/
+    │   ├── plans/
+    │   ├── research/
+    │   └── proposals/
     └── .current-goal      # Current working goal
 ```
 Each `research/<artifact>/` directory keeps a rolling `discussion.md` plus one `session-<timestamp>/` subdirectory per research command invocation so older analyses remain intact.
@@ -126,6 +132,7 @@ Goals progress through the following states:
 
 4. **Regular status reviews**: Use `teamwerx status` to review progress
 5. **Preserve history**: Treat AI-generated artifacts as append-only—create new research sessions and append to discussions instead of overwriting existing context
+6. **Archive promptly**: Run `teamwerx archive <goal-name>` once a goal is deployed so active folders only contain in-progress work
 
 ## Configuration
 

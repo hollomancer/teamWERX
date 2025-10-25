@@ -37,6 +37,9 @@ If no task-id: execute next pending task.
 ### `/teamwerx.propose [description]`
 Propose change to goal/plan. Save to `.teamwerx/proposals/[goal-name]/[proposal-id].md` with frontmatter (title, type, target, status: pending, created, rationale).
 
+### `/teamwerx.archive [goal-name] [--yes]`
+Archive a completed goal (defaults to the current goal). Moves the goal, plan, research, and proposal artifacts into `.teamwerx/archive/`. Use `--yes` to skip confirmation.
+
 ### `/teamwerx.list [--status=<status>]`
 List all goals. Filter by status if specified. Display title, status, created date.
 

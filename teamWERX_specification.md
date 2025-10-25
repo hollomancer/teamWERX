@@ -109,6 +109,7 @@ teamwerx discuss "Which auth library works best with our stack?"
 teamwerx discuss "How should we handle refresh tokens?"
 teamwerx discuss "Let's proceed with JWT and refresh tokens"
 teamwerx plan                                  # Generate implementation plan
+teamwerx archive implement-auth                # Archive artifacts after deployment
 ```
 
 ## Commands
@@ -153,6 +154,10 @@ All AI-facing commands are **non-destructive**. Instead of overwriting existing 
 
 *   `/teamwerx.propose [description]`: Propose a change to a goal or plan. The description is a string that describes the proposed change. Proposals are reviewed manually—update the proposal file’s `status` (e.g., `approved`, `rejected`) and rationale directly once a decision is made.
 *   `/teamwerx.plan`: Generates a task list based on the research and discussion.
+
+### Archiving
+
+*   `/teamwerx.archive [goal-name] [--yes]`: Archives a completed goal (defaults to the current goal). Moves the goal file, plan, research sessions, and proposals into `.teamwerx/archive/` while ensuring existing files are not overwritten. Use `--yes` to skip confirmation prompts.
 
 ### Execution
 
@@ -244,12 +249,18 @@ The `.teamwerx` directory is created in the root of the project to store all tea
 │   │   └── proposal-2.md
 │   └── goal-2/
 │       └── proposal-1.md
+├── archive/
+│   ├── goals/
+│   ├── plans/
+│   ├── research/
+│   └── proposals/
 └── .current-goal
 ```
 *   `goals/`: Contains the markdown files for each goal.
 *   `research/`: Contains discussion logs plus timestamped session folders (with reports, inputs, URLs, etc.). Each goal, plan, or proposal gets its own subdirectory (e.g., `research/goal-1/`, `research/goal-1-plan/`, `research/goal-1-proposal-2/`).
 *   `plans/`: Contains the implementation plans for each goal.
 *   `proposals/`: Contains change proposals for goals and plans.
+*   `archive/`: Stores archived copies of goals, plans, research, and proposals.
 *   `.current-goal`: Tracks the currently active goal (simple text file).
 
 ### Configuration
@@ -291,7 +302,7 @@ teamWERX uses git-based versioning for all artifacts. Manual commits with `[team
 **Version references:** Commit SHAs, tags, or branches (e.g., `a1b2c3d`, `v1.0.0`, `HEAD~1`)
 
 **Git workflow:**
-- Commit: `.teamwerx/goals/`, `.teamwerx/plans/`, `.teamwerx/research/`, `.teamwerx/proposals/`, `AGENTS.md`
+- Commit: `.teamwerx/goals/`, `.teamwerx/plans/`, `.teamwerx/research/`, `.teamwerx/proposals/`, `.teamwerx/archive/`, `AGENTS.md`
 - Ignore: `.teamwerx/.current-goal`, `.teamwerx/.temp/` (see .gitignore)
 
 ## Goal State Management
@@ -346,17 +357,14 @@ The following is a recommended workflow for managing proposals:
 
 ## Archiving
 
-Archive completed goals to `.teamwerx/archive/` to keep active goals focused:
+Use `/teamwerx.archive [goal-name]` to move completed work out of the active workspace:
 
-```bash
-# Archive a goal
-mv .teamwerx/goals/goal-name.md .teamwerx/archive/goals/
-mv .teamwerx/plans/goal-name.md .teamwerx/archive/plans/
-mv .teamwerx/research/goal-name/ .teamwerx/archive/research/
-mv .teamwerx/proposals/goal-name/ .teamwerx/archive/proposals/
-```
+1. The CLI looks up the goal (defaults to the current goal).
+2. It shows a summary of the artifacts to be moved (goal, plan, research directory, proposals) and asks for confirmation unless `--yes` is provided.
+3. Each artifact is moved into `.teamwerx/archive/<type>/`, automatically appending suffixes if files already exist.
+4. If the archived goal was set as the current goal, `.teamwerx/.current-goal` is cleared.
 
-Archived goals don't appear in `/teamwerx.list` but remain in git history.
+Archived goals no longer appear in `/teamwerx.list`, but they remain in `.teamwerx/archive/` (and git history) for auditing.
 
 ## AI Agent Integration
 
@@ -403,9 +411,9 @@ teamWERX integrates with AI agents through `AGENTS.md`, which contains both conf
 
 **Complete Goal Lifecycle:**
 ```bash
-teamwerx goal "..." → research → discuss "..." → plan → execute 1..N
-git add . && git commit -m "[teamWERX] ..."  # After each task
-# Update goal status, archive when done
+teamwerx goal "..." → research → discuss "..." → plan → execute 1..N → archive
+git add . && git commit -m "[teamWERX] ..."  # After each task/archive
+# Update goal status whenever state changes
 ```
 
 **Multi-Agent Coordination:**
@@ -449,7 +457,7 @@ teamwerx propose "..." → review & update proposal status manually → teamwerx
 **Research & Discussion:**
 - Run `/teamwerx.research` once per goal (initial analysis)
 - Use `/teamwerx.discuss` for iterative conversations (multiple rounds)
-- Follow recommended flow: goal → research → discuss → plan → execute
+- Follow recommended flow: goal → research → discuss → plan → execute → archive
 
 ## Extensibility
 

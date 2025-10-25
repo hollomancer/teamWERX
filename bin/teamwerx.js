@@ -29,6 +29,7 @@ const dryRunCommand = require('../lib/commands/dry-run');
 const planCommand = require('../lib/commands/plan');
 const executeCommand = require('../lib/commands/execute');
 const proposeCommand = require('../lib/commands/propose');
+const archiveCommand = require('../lib/commands/archive');
 
 // Configure CLI
 program
@@ -95,6 +96,12 @@ program
   .command('propose <description>')
   .description('Propose a change to a goal or plan')
   .action(proposeCommand);
+
+program
+  .command('archive [goal-name]')
+  .description('Archive a completed goal and move its artifacts into .teamwerx/archive/')
+  .option('--yes', 'Skip confirmation prompts')
+  .action(archiveCommand);
 
 // Error handling
 program.exitOverride();

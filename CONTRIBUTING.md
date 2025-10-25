@@ -175,7 +175,6 @@ git init
 ### Medium Priority
 
 - [ ] Add dependency tracking between goals
-- [ ] Implement archive functionality
 - [ ] Add conflict detection for multi-goal workflows
 - [ ] Create templates for AI-generated artifacts
 - [ ] Add progress visualization
