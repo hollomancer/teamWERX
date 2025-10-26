@@ -13,10 +13,10 @@ describe("Goal Command", () => {
   });
 
   test("should create a goal with provided description", async () => {
-    // Mock inquirer to avoid interactive prompts
-    const inquirer = require("inquirer");
-    const originalPrompt = inquirer.prompt;
-    inquirer.prompt = jest.fn().mockResolvedValue({ criterion: "" });
+    // Mock prompts to avoid interactive prompts
+    const prompts = require("../../lib/utils/prompts");
+    const originalPrompt = prompts.prompt;
+    prompts.prompt = jest.fn().mockResolvedValue({ criterion: "" });
 
     try {
       const result = await goal("Test goal description");
@@ -42,15 +42,15 @@ describe("Goal Command", () => {
         )
       ).toBe(true);
     } finally {
-      inquirer.prompt = originalPrompt;
+      prompts.prompt = originalPrompt;
     }
   });
 
   test("should prompt for description when none provided", async () => {
-    // Mock inquirer for both title and criteria prompts
-    const inquirer = require("inquirer");
-    const originalPrompt = inquirer.prompt;
-    inquirer.prompt = jest
+    // Mock prompts for both title and criteria prompts
+    const prompts = require("../../lib/utils/prompts");
+    const originalPrompt = prompts.prompt;
+    prompts.prompt = jest
       .fn()
       .mockResolvedValueOnce({ title: "Interactive Goal" })
       .mockResolvedValue({ criterion: "" });
@@ -66,7 +66,7 @@ describe("Goal Command", () => {
         )
       ).toBe(true);
     } finally {
-      inquirer.prompt = originalPrompt;
+      prompts.prompt = originalPrompt;
     }
   });
 

@@ -23,11 +23,13 @@ async function createTestWorkspace(prefix = "teamwerx-test") {
   const teamwerxDir = path.join(testDir, ".teamwerx");
   const goalsDir = path.join(teamwerxDir, "goals");
   const plansDir = path.join(teamwerxDir, "plans");
-  const workspacesDir = path.join(teamwerxDir, "workspaces");
+  // Use the goals directory as the workspace root so tests align with
+  // GoalWorkspaceManager which creates workspaces under .teamwerx/goals.
+  const workspacesDir = goalsDir;
 
   await fs.mkdir(goalsDir, { recursive: true });
   await fs.mkdir(plansDir, { recursive: true });
-  await fs.mkdir(workspacesDir, { recursive: true });
+  // No separate workspaces directory required; workspaces live under .teamwerx/goals
 
   const originalCwd = process.cwd();
 

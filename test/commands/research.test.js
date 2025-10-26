@@ -75,7 +75,8 @@ describe("Research Command", () => {
       // Expected to throw due to process.exit
     }
 
-    expect(env.exit.getExitCode()).toBe(1);
+    // Validation errors now use the standardized validation exit code.
+    expect(env.exit.getExitCode()).toBe(5);
     expect(
       env.console.errors.some((error) => error.includes("No goal specified"))
     ).toBe(true);

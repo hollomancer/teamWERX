@@ -92,7 +92,7 @@ This is a test goal.`;
       // Expected to throw due to process.exit
     }
 
-    expect(exitCode).toBe(1);
+    expect(exitCode).toBe(3);
     expect(
       consoleErrorOutput.some((output) => output.includes("not found"))
     ).toBe(true);
