@@ -150,6 +150,9 @@ Test goal content.`;
         .then(() => true)
         .catch(() => false);
       expect(fileExists).toBe(true);
+
+      // Clean up the goal file so subsequent tests expecting no goals work
+      await fs.unlink(goalFile);
     });
   });
 
@@ -159,7 +162,7 @@ Test goal content.`;
         await execAsync(`node ${cliPath} use nonexistent-goal`);
         fail("Expected command to fail");
       } catch (err) {
-        expect(err.code).toBe(1);
+        expect(err.code).toBe(3);
         expect(err.stderr).toContain("not found");
       }
     });
@@ -185,7 +188,7 @@ Test goal content.`;
         await execAsync(`node ${cliPath} research`);
         fail("Expected command to fail");
       } catch (err) {
-        expect(err.code).toBe(1);
+        expect(err.code).toBe(5);
         expect(err.stderr).toContain("No goal specified");
       }
     });
@@ -205,7 +208,7 @@ Test goal content.`;
         await execAsync(`node ${cliPath} plan "test plan"`);
         fail("Expected command to fail");
       } catch (err) {
-        expect(err.code).toBe(1);
+        expect(err.code).toBe(5);
         expect(err.stderr).toContain("No goal specified");
       }
     });
