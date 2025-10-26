@@ -71,28 +71,31 @@ describe("Goal Command", () => {
   });
 
   test("should require at least one success criterion", async () => {
-    // Mock inquirer to provide empty criteria
-    const inquirer = require("inquirer");
-    const originalPrompt = inquirer.prompt;
-    inquirer.prompt = jest
+    // Mock prompts to simulate an empty title and an empty criterion so validation triggers
+    const prompts = require("../../lib/utils/prompts");
+    const originalPrompt = prompts.prompt;
+    // First prompt call (title) -> empty title, second (criterion) -> empty criterion
+    prompts.prompt = jest
       .fn()
-      .mockResolvedValueOnce({ title: "Test Goal" })
+      .mockResolvedValueOnce({ title: "" })
       .mockResolvedValue({ criterion: "" });
 
     try {
       await goal();
     } catch (err) {
-      // Should throw due to validation
+      // Expected to throw due to validation -> process.exit is mocked by test harness
     }
 
-    expect(env.exit.getExitCode()).toBe(1);
+    // Validation should trigger a validation error exit code (5)
+    expect(env.exit.getExitCode()).toBe(5);
     expect(
       env.console.errors.some((error) =>
-        error.includes("success criterion is required")
+        error.includes("At least one success criterion is required")
       )
     ).toBe(true);
 
-    inquirer.prompt = originalPrompt;
+    // Restore original prompt
+    prompts.prompt = originalPrompt;
   });
 
   test("should error when teamWERX is not initialized", async () => {
@@ -113,7 +116,7 @@ describe("Goal Command", () => {
       // Expected to throw due to process.exit
     }
 
-    expect(env.exit.getExitCode()).toBe(1);
+    expect(env.exit.getExitCode()).toBe(2);
     expect(
       env.console.errors.some((error) => error.includes("not initialized"))
     ).toBe(true);
