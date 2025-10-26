@@ -10,6 +10,27 @@ const { program } = require("commander");
 const chalk = require("chalk");
 const packageJson = require("../package.json");
 
+// When running tests or CI set TEAMWERX_CI=1 to make CLI prompts non-interactive.
+// Load the CI prompt shim early so any subsequent `inquirer.prompt` calls will
+// be auto-answered with sensible defaults.
+try {
+  // Require the shim module and install it if available.
+  // The shim is a no-op when TEAMWERX_CI is not set.
+  // Use a try/catch to avoid blowing up if the module isn't present.
+  // eslint-disable-next-line global-require
+  const ciPrompt = require("../lib/utils/ci-prompt");
+  if (ciPrompt && typeof ciPrompt.install === "function") {
+    ciPrompt.install();
+  }
+} catch (err) {
+  // Silently ignore failures; production CLI should not depend on the shim.
+  // eslint-disable-next-line no-console
+  console.debug(
+    "CI prompt shim not installed or failed to load:",
+    err && err.message ? err.message : err
+  );
+}
+
 const collectValues = (value, previous) => {
   if (Array.isArray(previous)) {
     return previous.concat([value]);
@@ -262,9 +283,13 @@ program.exitOverride();
 try {
   program.parse(process.argv);
 
-  // Show help if no command provided
+  // Show help if no command provided — ensure it is written to stdout so tests
+  // that assert on stdout receive the help text reliably.
   if (!process.argv.slice(2).length) {
-    program.outputHelp();
+    // commander.outputHelp() can write to stderr in some environments; explicitly
+    // write the help information to stdout for deterministic test behavior.
+    // Use helpInformation() to obtain the full help text.
+    process.stdout.write(program.helpInformation());
   }
 } catch (err) {
   if (err.code === "commander.help") {
@@ -274,6 +299,7 @@ try {
     // Version was requested, exit cleanly
     process.exit(0);
   } else {
+    // Write errors to stderr as before
     console.error(chalk.red("Error:"), err.message);
     process.exit(1);
   }

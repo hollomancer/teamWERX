@@ -60,15 +60,13 @@ describe("Changes workflow end-to-end smoke test", () => {
     }
   });
 
-  test(
-    "propose → apply (dry-run) → apply → archive results in archived change",
-    async () => {
-      const goalSlug = "e2e-change-goal";
-      const goalFile = path.join(testDir, ".teamwerx", "goals", `${goalSlug}.md`);
+  test("propose → apply (dry-run) → apply → archive results in archived change", async () => {
+    const goalSlug = "e2e-change-goal";
+    const goalFile = path.join(testDir, ".teamwerx", "goals", `${goalSlug}.md`);
 
-      // Create a simple goal file so propose --goal can reference it
-      await fs.mkdir(path.dirname(goalFile), { recursive: true });
-      const goalContent = `---
+    // Create a simple goal file so propose --goal can reference it
+    await fs.mkdir(path.dirname(goalFile), { recursive: true });
+    const goalContent = `---
 title: "E2E Change Goal"
 created: "${new Date().toISOString().split("T")[0]}"
 success_criteria:
@@ -77,95 +75,100 @@ success_criteria:
 
 E2E goal for change workflow tests.
 `;
-      await fs.writeFile(goalFile, goalContent, "utf8");
+    await fs.writeFile(goalFile, goalContent, "utf8");
 
-      // 1) Propose a change for the goal
-      const changeTitle = "Add sample change for e2e test";
-      const proposeCmd = `node ${cliPath} propose "${changeTitle}" --goal ${goalSlug}`;
-      const { stdout: proposeStdout } = await execAsync(proposeCmd);
+    // 1) Propose a change for the goal
+    const changeTitle = "Add sample change for e2e test";
+    const proposeCmd = `node ${cliPath} propose "${changeTitle}" --goal ${goalSlug}`;
+    const { stdout: proposeStdout } = await execAsync(proposeCmd);
 
-      // Try to extract the created ID from the CLI output (robust)
-      // CLI prints a line like: "ID: 001-add-sample-change-for-e2e-test"
-      const idMatch = proposeStdout.match(/ID:\s*(\S+)/i);
-      let changeDirName = idMatch ? idMatch[1].trim() : null;
+    // Try to extract the created ID from the CLI output (robust)
+    // CLI prints a line like: "ID: 001-add-sample-change-for-e2e-test"
+    const idMatch = proposeStdout.match(/ID:\s*(\S+)/i);
+    let changeDirName = idMatch ? idMatch[1].trim() : null;
 
-      // After proposing, ensure changes directory exists
-      const changesDir = path.join(testDir, ".teamwerx", "changes");
-      const changesDirExists = await fs
-        .stat(changesDir)
-        .then(() => true)
-        .catch(() => false);
-      expect(changesDirExists).toBe(true);
+    // After proposing, ensure changes directory exists
+    const changesDir = path.join(testDir, ".teamwerx", "changes");
+    const changesDirExists = await fs
+      .stat(changesDir)
+      .then(() => true)
+      .catch(() => false);
+    expect(changesDirExists).toBe(true);
 
-      // Read change directories (expect at least one)
-      const changeEntries = await fs.readdir(changesDir).catch(() => []);
-      expect(changeEntries.length).toBeGreaterThan(0);
+    // Read change directories (expect at least one)
+    const changeEntries = await fs.readdir(changesDir).catch(() => []);
+    expect(changeEntries.length).toBeGreaterThan(0);
 
-      // If we couldn't parse the ID from the output, fallback to the first entry
-      if (!changeDirName) {
-        changeDirName = changeEntries[0];
-      }
-      expect(changeDirName).toBeTruthy();
+    // If we couldn't parse the ID from the output, fallback to the first entry
+    if (!changeDirName) {
+      changeDirName = changeEntries[0];
+    }
+    expect(changeDirName).toBeTruthy();
 
-      // Basic sanity-check: expect the directory name to start with a 3-digit prefix
-      expect(/^\d{3}[-_].+/.test(changeDirName)).toBe(true);
-      const changeId = changeDirName.split(/[-_]/)[0];
+    // Basic sanity-check: expect the directory name to start with a 3-digit prefix
+    expect(/^\d{3}[-_].+/.test(changeDirName)).toBe(true);
+    const changeId = changeDirName.split(/[-_]/)[0];
 
-      // Sanity: propose output should mention the title or id/directory name
-      expect(
-        proposeStdout.includes(changeTitle) ||
-          proposeStdout.includes(changeId) ||
-          proposeStdout.includes(changeDirName)
-      ).toBeTruthy();
+    // Sanity: propose output should mention the title or id/directory name
+    expect(
+      proposeStdout.includes(changeTitle) ||
+        proposeStdout.includes(changeId) ||
+        proposeStdout.includes(changeDirName)
+    ).toBeTruthy();
 
-      // 2) Dry-run apply (use the full change directory name parsed from propose)
-      const dryRunCmd = `node ${cliPath} changes apply ${changeDirName} --goal ${goalSlug} --dry-run`;
-      const { stdout: dryRunStdout } = await execAsync(dryRunCmd);
-      // Dry-run output should at least mention 'dry' or echo the change id/title
-      expect(
-        /dry/i.test(dryRunStdout) ||
-          dryRunStdout.includes(changeTitle) ||
-          dryRunStdout.includes(changeId) ||
-          dryRunStdout.includes(changeDirName)
-      ).toBeTruthy();
+    // 2) Dry-run apply (use the full change directory name parsed from propose)
+    const dryRunCmd = `node ${cliPath} changes apply ${changeDirName} --goal ${goalSlug} --dry-run`;
+    const { stdout: dryRunStdout } = await execAsync(dryRunCmd);
+    // Dry-run output should at least mention 'dry' or echo the change id/title
+    expect(
+      /dry/i.test(dryRunStdout) ||
+        dryRunStdout.includes(changeTitle) ||
+        dryRunStdout.includes(changeId) ||
+        dryRunStdout.includes(changeDirName)
+    ).toBeTruthy();
 
-      // 3) Real apply (confirm with --yes)
-      const applyCmd = `node ${cliPath} changes apply ${changeDirName} --goal ${goalSlug} --yes`;
-      const { stdout: applyStdout } = await execAsync(applyCmd);
-      // Apply should indicate success or include the change id/title
-      expect(
-        /apply|applied|import/i.test(applyStdout) ||
-          applyStdout.includes(changeTitle) ||
-          applyStdout.includes(changeId) ||
-          applyStdout.includes(changeDirName)
-      ).toBeTruthy();
+    // 3) Real apply (confirm with --yes)
+    const applyCmd = `node ${cliPath} changes apply ${changeDirName} --goal ${goalSlug} --yes`;
+    const { stdout: applyStdout } = await execAsync(applyCmd);
+    // Apply should indicate success or include the change id/title
+    expect(
+      /apply|applied|import/i.test(applyStdout) ||
+        applyStdout.includes(changeTitle) ||
+        applyStdout.includes(changeId) ||
+        applyStdout.includes(changeDirName)
+    ).toBeTruthy();
 
-      // 4) Archive the change (use full changeDirName)
-      const archiveCmd = `node ${cliPath} changes archive ${changeDirName} --goal ${goalSlug} --yes`;
-      const { stdout: archiveStdout } = await execAsync(archiveCmd);
-      expect(
-        /archive|archiv/i.test(archiveStdout) ||
-          archiveStdout.includes(changeTitle) ||
-          archiveStdout.includes(changeId) ||
-          archiveStdout.includes(changeDirName)
-      ).toBeTruthy();
+    // 4) Archive the change (use full changeDirName)
+    const archiveCmd = `node ${cliPath} changes archive ${changeDirName} --goal ${goalSlug} --yes`;
+    const { stdout: archiveStdout } = await execAsync(archiveCmd);
+    expect(
+      /archive|archiv/i.test(archiveStdout) ||
+        archiveStdout.includes(changeTitle) ||
+        archiveStdout.includes(changeId) ||
+        archiveStdout.includes(changeDirName)
+    ).toBeTruthy();
 
-      // After archive, ensure the change was moved into .teamwerx/archive/changes/
-      const archiveChangesDir = path.join(testDir, ".teamwerx", "archive", "changes");
-      const archiveDirExists = await fs
-        .stat(archiveChangesDir)
-        .then(() => true)
-        .catch(() => false);
-      expect(archiveDirExists).toBe(true);
+    // After archive, ensure the change was moved into .teamwerx/archive/changes/
+    const archiveChangesDir = path.join(
+      testDir,
+      ".teamwerx",
+      "archive",
+      "changes"
+    );
+    const archiveDirExists = await fs
+      .stat(archiveChangesDir)
+      .then(() => true)
+      .catch(() => false);
+    expect(archiveDirExists).toBe(true);
 
-      const archivedEntries = await fs.readdir(archiveChangesDir).catch(() => []);
-      // Expect the archived folder list to include the exact directory name we used
-      const foundExact = archivedEntries.includes(changeDirName);
-      expect(foundExact).toBe(true);
-      // Also accept archived names that preserve numeric prefix
-      const foundByPrefix = archivedEntries.some((n) => n.startsWith(`${changeId}-`));
-      expect(foundByPrefix).toBe(true);
-    },
-    30000
-  );
+    const archivedEntries = await fs.readdir(archiveChangesDir).catch(() => []);
+    // Expect the archived folder list to include the exact directory name we used
+    const foundExact = archivedEntries.includes(changeDirName);
+    expect(foundExact).toBe(true);
+    // Also accept archived names that preserve numeric prefix
+    const foundByPrefix = archivedEntries.some((n) =>
+      n.startsWith(`${changeId}-`)
+    );
+    expect(foundByPrefix).toBe(true);
+  }, 30000);
 });
