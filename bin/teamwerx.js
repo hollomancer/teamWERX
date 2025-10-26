@@ -216,6 +216,8 @@ program
 
 // Changes / proposals CLI (full-featured)
 // Propose: scaffold a change under .teamwerx/changes/
+// Changes (proposals) command module (full-featured apply/archive workflow)
+// Keep the top-level convenience `propose` (backwards compatible with existing tests/scripts)
 program
   .command("propose <title>")
   .description("Create a change proposal scaffold")
@@ -223,30 +225,31 @@ program
   .option("--author <author>", "Author name/email")
   .action((title, opts) => changesCommand.propose(title, opts));
 
-// List change proposals
-program
-  .command("changes list")
+// Register 'changes' as a command group so subcommands parse their own options correctly
+const changesGroup = program
+  .command("changes")
+  .description("Change management commands (list, show, apply, archive)");
+
+changesGroup
+  .command("list")
   .description("List change proposals")
   .action((opts) => changesCommand.list(null, opts));
 
-// Show a specific change (by id or slug)
-program
-  .command("changes show <change-id>")
+changesGroup
+  .command("show <change-id>")
   .description("Show change details")
   .action((id, opts) => changesCommand.show(id, opts));
 
-// Apply a change: import tasks into the canonical plan and create implementation stubs
-program
-  .command("changes apply <change-id>")
+changesGroup
+  .command("apply <change-id>")
   .description("Apply a change (import tasks into plan)")
   .option("--goal <goal>", "Target goal slug")
   .option("--dry-run", "Preview tasks without applying")
   .option("--yes", "Skip confirmation prompts")
   .action((id, opts) => changesCommand.apply(id, opts));
 
-// Archive a change into .teamwerx/archive/changes/
-program
-  .command("changes archive <change-id>")
+changesGroup
+  .command("archive <change-id>")
   .description("Archive change into .teamwerx/archive/changes/")
   .option("--goal <goal>", "Goal to notify (optional)")
   .option("--notify", "Notify the goal discussion log")
