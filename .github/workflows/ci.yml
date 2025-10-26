@@ -9,6 +9,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: "--max-old-space-size=4096"
 
     strategy:
       matrix:
@@ -33,11 +35,25 @@ jobs:
       - name: Lint
         run: npx eslint lib bin
 
-      - name: Run unit tests
-        run: npx jest --runInBand --testPathIgnorePatterns=e2e
+      - name: Run unit tests (core & utils)
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        run: TEAMWERX_CI=1 npx jest --runInBand --testPathPattern="test/(core|utils)"
+
+      - name: Run command tests (limited workers)
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        run: TEAMWERX_CI=1 npx jest --maxWorkers=2 --testPathPattern="test/commands"
+
+      - name: Run remaining tests (other directories)
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        run: TEAMWERX_CI=1 npx jest --maxWorkers=50% --testPathIgnorePatterns=e2e
 
   e2e-test:
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: "--max-old-space-size=4096"
 
     strategy:
       matrix:
