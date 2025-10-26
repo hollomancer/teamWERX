@@ -661,19 +661,101 @@ teamwerx status add-payment-integration
 teamwerx use authentication-feature
 ```
 
-### Change Management
+### Change Management (full-featured)
 
+teamWERX supports a first-class change proposal workflow (inspired by OpenSpec). Use this workflow to author a non-destructive change proposal, review tasks, import them into the canonical plan, and archive the change for auditability.
+
+Lifecycle (high level)
+1. Propose (draft)
+   - Scaffold a change under `.teamwerx/changes/<id>-<slug>/` containing:
+     - `proposal.md` — YAML frontmatter + body describing intent, goal linkage, and acceptance criteria
+     - `tasks.md` — checklist of tasks (checkbox list). These are authoring artifacts until applied.
+     - `spec-delta.md` — optional spec or design notes
+     - `status.json` — small machine state (draft | applied | archived)
+   - A `Dxx` proposal entry is also appended to the referenced goal discussion log (if a goal is specified) to keep the proposal discoverable.
+2. Review
+   - Edit `proposal.md` and `tasks.md`, discuss in the goal `discuss.md`, and iterate until approval.
+3. Apply
+   - Run an explicit `apply` step to import tasks into the canonical plan file (`.teamwerx/goals/00X-<slug>/plan.md`) using the `PlanManager`.
+   - Implementation stubs are created under the goal workspace (`.teamwerx/goals/00X-<slug>/implementation/Txx.md`) via `ImplementationManager`.
+   - The change `status.json` is updated to `applied` and a discussion entry is added for traceability.
+4. Archive
+   - Move the change folder into `.teamwerx/archive/changes/` and optionally add an archive note to the goal discussion log.
+
+Commands (CLI)
+- `teamwerx propose "<title>" [--goal <slug>] [--author <author>]`
+  - Create a new proposal scaffold at `.teamwerx/changes/<id>-<slug>/`.
+  - Writes `proposal.md`, `tasks.md`, `spec-delta.md`, and `status.json`.
+  - Adds a `--proposal` discussion entry for the goal (if provided).
+
+- `teamwerx changes list`
+  - List change proposals and their current status.
+
+- `teamwerx changes show <id|slug>`
+  - Display the proposal frontmatter, a tasks summary, and the spec delta excerpt.
+
+- `teamwerx changes apply <id|slug> [--goal <slug>] [--dry-run] [--yes]`
+  - Import tasks from the change's `tasks.md` into the canonical `.teamwerx/goals/00X-<slug>/plan.md` (using `PlanManager.addTask()`).
+  - Create implementation stubs with `ImplementationManager.createRecord()`.
+  - Updates `status.json` to `applied` and appends a discussion entry for traceability.
+  - `--dry-run` previews tasks without modifying any files. `--yes` skips confirmations for scriptable workflows.
+
+- `teamwerx changes archive <id|slug> [--goal <slug>] [--notify] [--yes]`
+  - Move the change folder to `.teamwerx/archive/changes/`.
+  - Optionally notify the referenced goal discussion log (`--notify`) that the change was archived.
+
+Files read/written (summary)
+- Created under proposal flow:
+  - `.teamwerx/changes/<id>-<slug>/proposal.md`
+  - `.teamwerx/changes/<id>-<slug>/tasks.md`
+  - `.teamwerx/changes/<id>-<slug>/spec-delta.md`
+  - `.teamwerx/changes/<id>-<slug>/status.json`
+- When applied:
+  - `.teamwerx/goals/00X-<slug>/plan.md` — tasks are added here (canonical source)
+  - `.teamwerx/goals/00X-<slug>/implementation/Txx.md` — implementation stubs
+- When archived:
+  - `.teamwerx/archive/changes/<id>-<slug>/` — archived change folder
+
+Integration with existing artifacts and commands
+- Single source of truth for tasks: `plan.md` remains authoritative. `changes/*.md` are authoring artifacts until `apply` is invoked.
+- Discussion trace: `discuss --proposal` entries are still used; the change manager appends discovery and apply/archive entries into the goal's `discuss.md` so the audit trail remains in the workspace.
+- Implementation records use the existing `ImplementationManager` for consistency with `teamwerx complete`.
+- Archival uses the same `.teamwerx/archive/` area already used by `teamwerx archive`.
+
+Quick recipe (copy/paste)
 ```bash
-# Propose a change
-teamwerx discuss "Proposal: Switch authentication to OAuth2" --proposal
+# 1) Create a change proposal
+teamwerx propose "Add profile search filters" --goal 002-user-profiles
 
-# Review proposal (manual)
-# Edit .teamwerx/goals/001-my-goal/discuss.md
-# Update proposal status in discussion entry
+# 2) Review and refine (edit files and discuss)
+teamwerx changes show 001-add-profile-search-filters
+teamwerx discuss "Feedback about filter UX" --proposal --goal 002-user-profiles
 
-# If approved, update plan
-teamwerx plan
+# 3) Preview apply
+teamwerx changes apply 001-add-profile-search-filters --dry-run
+
+# 4) Apply the change (imports tasks into plan and creates stubs)
+teamwerx changes apply 001-add-profile-search-filters --goal 002-user-profiles --yes
+
+# 5) Archive when complete
+teamwerx changes archive 001-add-profile-search-filters --notify --goal 002-user-profiles --yes
 ```
+
+Guidelines & safety notes
+- Non-destructive by default: authoring files live in `.teamwerx/changes/` and nothing in the canonical plan is modified until you run `changes apply`.
+- Always run `--dry-run` to preview imports in automation.
+- Use `--yes` only in trusted automation contexts; otherwise the CLI will prompt for confirmation before applying or archiving.
+- The change `id` embeds a numeric prefix and kebab slug (e.g., `001-add-profile-filters`) to make cross-referencing simple.
+
+Command → Primary file mapping (changes)
+- `teamwerx propose` → writes `/.teamwerx/changes/<id>/proposal.md` + `tasks.md` + `spec-delta.md`
+- `teamwerx changes show` → reads files under `.teamwerx/changes/<id>/`
+- `teamwerx changes apply` → reads `.teamwerx/changes/<id>/tasks.md`, writes `.teamwerx/goals/00X-<slug>/plan.md` and implementation stubs
+- `teamwerx changes archive` → moves change folder to `.teamwerx/archive/changes/<id>/`
+
+See also
+- `teamwerx discuss` — keep the debate and acceptance criteria in the discussion log for auditability before you apply a change
+- `teamwerx plan` — after applying changes, review the updated plan and adjust task ordering or dependencies if needed
 
 ## Best Practices
 
