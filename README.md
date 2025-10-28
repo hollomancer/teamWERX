@@ -1,6 +1,9 @@
 # teamWERX
+[![Release (goreleaser)](https://github.com/teamwerx/teamwerx/actions/workflows/release.yml/badge.svg)](https://github.com/teamwerx/teamwerx/actions/workflows/release.yml)
 
 ## Go CLI Installation
+
+> Release builds are published automatically via GoReleaser when tags (v*) are pushed. Download binaries from the GitHub Releases page.
 
 You can install and run the Go-based CLI in a few different ways. Choose the one that fits your workflow:
 
