@@ -5,8 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/teamwerx/teamwerx/internal/model"
 	custom_errors "github.com/teamwerx/teamwerx/internal/errors"
+	"github.com/teamwerx/teamwerx/internal/model"
+	"github.com/teamwerx/teamwerx/internal/utils"
 )
 
 // specManager implements the SpecManager interface.
@@ -36,14 +37,41 @@ func (m *specManager) ReadSpec(domain string) (*model.Spec, error) {
 		return nil, err
 	}
 
-	return m.parser.Parse(content)
+	spec, err := m.parser.Parse(content)
+	if err != nil {
+		return nil, err
+	}
+	// Ensure the domain is set on the parsed spec
+	spec.Domain = domain
+
+	// Compute and set a fingerprint for the spec content for conflict detection.
+	// GenerateFingerprint trims surrounding whitespace before hashing so incidental
+	// formatting differences do not change the fingerprint.
+	spec.Fingerprint = utils.GenerateFingerprint(spec.Content)
+
+	return spec, nil
 }
 
 // WriteSpec writes a spec to a file.
+// If `spec.Content` is present (non-empty), prefer writing it directly as the file's content.
+// Otherwise fall back to the serializer to construct the content.
 func (m *specManager) WriteSpec(spec *model.Spec) error {
 	path := filepath.Join(m.baseDir, spec.Domain, "spec.md")
-	content, err := m.serializer.Serialize(spec)
-	if err != nil {
+
+	var content []byte
+	var err error
+
+	if spec != nil && spec.Content != "" {
+		content = []byte(spec.Content)
+	} else {
+		content, err = m.serializer.Serialize(spec)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Ensure the target directory exists before writing the file.
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return err
 	}
 

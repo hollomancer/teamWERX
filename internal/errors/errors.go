@@ -30,3 +30,30 @@ func (e *ErrConflict) Error() string {
 func NewErrConflict(message string) error {
 	return &ErrConflict{Message: message}
 }
+
+// ErrDiverged is returned when a spec (or other artifact) has diverged from the
+// expected base fingerprint. This is useful to detect concurrent edits and
+// prevent silent overwrites during merges.
+type ErrDiverged struct {
+	Domain             string // domain or resource name that diverged
+	BaseFingerprint    string // fingerprint expected by the incoming change
+	CurrentFingerprint string // current fingerprint present in the repository
+	Reason             string // optional human-readable reason
+}
+
+func (e *ErrDiverged) Error() string {
+	if e.Reason != "" {
+		return fmt.Sprintf("resource '%s' diverged: base=%s current=%s: %s", e.Domain, e.BaseFingerprint, e.CurrentFingerprint, e.Reason)
+	}
+	return fmt.Sprintf("resource '%s' diverged: base=%s current=%s", e.Domain, e.BaseFingerprint, e.CurrentFingerprint)
+}
+
+// NewErrDiverged creates a new ErrDiverged.
+func NewErrDiverged(domain, baseFP, currentFP, reason string) error {
+	return &ErrDiverged{
+		Domain:             domain,
+		BaseFingerprint:    baseFP,
+		CurrentFingerprint: currentFP,
+		Reason:             reason,
+	}
+}

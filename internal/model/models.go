@@ -4,10 +4,10 @@ import "time"
 
 // Project represents the central application state, holding all loaded data.
 type Project struct {
-	Goals       []Goal            `json:"goals"`
-	Specs       []Spec            `json:"specs"`
-	Changes     []Change          `json:"changes"`
-	Workspace   string            `json:"workspace"` // Base directory for .teamwerx
+	Goals     []Goal   `json:"goals"`
+	Specs     []Spec   `json:"specs"`
+	Changes   []Change `json:"changes"`
+	Workspace string   `json:"workspace"` // Base directory for .teamwerx
 }
 
 // DiscussionEntry represents a single entry in a goal's discussion log.
@@ -28,8 +28,8 @@ type Goal struct {
 
 // Plan represents a collection of tasks for a goal.
 type Plan struct {
-	GoalID  string    `json:"goal_id"`
-	Tasks   []Task    `json:"tasks"`
+	GoalID    string    `json:"goal_id"`
+	Tasks     []Task    `json:"tasks"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
@@ -58,18 +58,19 @@ type Requirement struct {
 
 // Change represents a change proposal.
 type Change struct {
-	ID          string    `json:"id"`
-	Title       string    `json`
-	Status      string    `json:"status"`
-	GoalID      string    `json:"goal_id"`
-	CreatedAt   time.Time `json:"created_at"`
-	SpecDeltas  []SpecDelta `json:"spec_deltas"`
+	ID         string      `json:"id"`
+	Title      string      `json`
+	Status     string      `json:"status"`
+	GoalID     string      `json:"goal_id"`
+	CreatedAt  time.Time   `json:"created_at"`
+	SpecDeltas []SpecDelta `json:"spec_deltas"`
 }
 
 // SpecDelta represents the changes to a spec in a proposal.
 type SpecDelta struct {
-	Domain     string        `json:"domain"`
-	Operations []DeltaOperation `json:"operations"`
+	Domain          string           `json:"domain"`
+	BaseFingerprint string           `json:"base_fingerprint,omitempty"`
+	Operations      []DeltaOperation `json:"operations"`
 }
 
 // DeltaOperation represents a single operation in a spec delta.
