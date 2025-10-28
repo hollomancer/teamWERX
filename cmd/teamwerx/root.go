@@ -9,6 +9,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/teamwerx/teamwerx/internal/core"
+	custom_errors "github.com/teamwerx/teamwerx/internal/errors"
 	"github.com/teamwerx/teamwerx/internal/model"
 	promptutil "github.com/teamwerx/teamwerx/internal/utils/prompt"
 )
@@ -84,11 +85,10 @@ var (
 	}
 
 	changeResolveCmd = &cobra.Command{
-		Use:    "resolve",
-		Short:  "Interactively resolve change conflicts (TODO)",
-		Long:   "TODO: Interactive conflict resolution flow for applying changes with merge conflicts.",
-		Hidden: true,
-		RunE:   runChangeResolve,
+		Use:   "resolve",
+		Short: "Interactively resolve change conflicts",
+		Long:  "Resolve ErrDiverged conflicts when applying a change by allowing refresh/skip/cancel per domain, then re-apply.",
+		RunE:  runChangeResolve,
 	}
 
 	discussCmd = &cobra.Command{
@@ -198,6 +198,8 @@ func init() {
 	_ = changeApplyCmd.MarkFlagRequired("id")
 	changeArchiveCmd.Flags().StringVar(&changeID, "id", "", "Change ID to archive")
 	_ = changeArchiveCmd.MarkFlagRequired("id")
+	changeResolveCmd.Flags().StringVar(&changeID, "id", "", "Change ID to resolve conflicts for")
+	_ = changeResolveCmd.MarkFlagRequired("id")
 }
 
 func runSpecList(cmd *cobra.Command, args []string) error {
@@ -442,16 +444,93 @@ func runChangeArchive(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// TODO: 'change resolve' interactive flow scaffolding.
-// Outline of the planned steps:
-// 1) Detect conflicts via SpecMerger.Merge (ErrDiverged).
-// 2) Present options to the user (refresh/retry, accept incoming, keep existing, manual edit).
-// 3) Apply chosen strategy, update change base fingerprint, and re-attempt apply.
-// 4) Write back updated artifacts and log discussion entry.
+// change resolve: interactively handle ErrDiverged conflicts by allowing the user
+// to refresh base fingerprints from current specs or skip conflicting domains, then
+// re-apply the change. Saves any updates to the change file on success.
 func runChangeResolve(cmd *cobra.Command, args []string) error {
-	color.Yellow("TODO: 'change resolve' interactive flow not implemented yet.")
-	color.Yellow("Planned steps: detect conflicts, present options, apply strategy, and re-apply.")
-	return nil
+	if strings.TrimSpace(changeID) == "" {
+		return fmt.Errorf("change id is required")
+	}
+
+	app, err := core.NewApp(core.AppOptions{
+		SpecsDir:   specsBaseDir,
+		GoalsDir:   goalsBaseDir,
+		ChangesDir: changesBaseDir,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to init app: %w", err)
+	}
+
+	ch, err := app.ChangeManager.ReadChange(changeID)
+	if err != nil {
+		return fmt.Errorf("failed to read change: %w", err)
+	}
+
+	for {
+		// Attempt to apply the full change
+		if err := app.ChangeManager.ApplyChange(ch); err == nil {
+			color.New(color.FgGreen).Printf("Applied change %s: %s\n", ch.ID, ch.Title)
+			// Persist updated change (e.g., refreshed BaseFingerprints or pruned deltas)
+			_ = app.ChangeManager.Save(ch)
+			return nil
+		} else {
+			// Check for divergence conflicts
+			if de, ok := err.(*custom_errors.ErrDiverged); ok && de != nil {
+				color.Yellow("Conflict detected for domain '%s' (base=%s current=%s)", de.Domain, de.BaseFingerprint, de.CurrentFingerprint)
+
+				// Offer resolution choices
+				opts := []string{
+					"Refresh base fingerprint from current spec and retry",
+					"Skip this domain and continue",
+					"Cancel",
+				}
+				idx, _, perr := promptutil.Select("Choose a resolution", opts, 0)
+				if perr != nil {
+					return fmt.Errorf("prompt failed: %w", perr)
+				}
+
+				switch idx {
+				case 0: // Refresh base fingerprint and retry
+					// Read current spec to obtain its fingerprint
+					spec, rerr := app.SpecManager.ReadSpec(de.Domain)
+					if rerr != nil {
+						return fmt.Errorf("failed to read current spec for '%s': %w", de.Domain, rerr)
+					}
+					// Update BaseFingerprint for the conflicting delta
+					for i := range ch.SpecDeltas {
+						if ch.SpecDeltas[i].Domain == de.Domain {
+							ch.SpecDeltas[i].BaseFingerprint = spec.Fingerprint
+						}
+					}
+					// Loop and retry apply
+					continue
+
+				case 1: // Skip this domain and continue
+					pruned := ch.SpecDeltas[:0]
+					for i := range ch.SpecDeltas {
+						if ch.SpecDeltas[i].Domain != de.Domain {
+							pruned = append(pruned, ch.SpecDeltas[i])
+						}
+					}
+					ch.SpecDeltas = pruned
+					if len(ch.SpecDeltas) == 0 {
+						color.Yellow("All deltas skipped; nothing to apply.")
+						_ = app.ChangeManager.Save(ch)
+						return nil
+					}
+					// Loop and retry apply with remaining deltas
+					continue
+
+				default: // Cancel
+					color.Yellow("Cancelled by user. No changes were applied.")
+					return nil
+				}
+			}
+
+			// Non-divergence error: surface to caller
+			return fmt.Errorf("failed to apply change: %w", err)
+		}
+	}
 }
 
 func runDiscussList(cmd *cobra.Command, args []string) error {

@@ -188,6 +188,10 @@ func (m *changeManager) saveChangeToPath(change *model.Change, path string) erro
 	return fileutil.WriteFile(path, data, 0o644)
 }
 
+func (m *changeManager) Save(change *model.Change) error {
+	return m.saveChange(change)
+}
+
 func (m *changeManager) changeDir(changeID string) string {
 	return filepath.Join(m.baseDir, changeID)
 }

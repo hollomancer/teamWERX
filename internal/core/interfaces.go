@@ -20,6 +20,7 @@ type PlanManager interface {
 type ChangeManager interface {
 	ReadChange(changeID string) (*model.Change, error)
 	ListChanges() ([]*model.Change, error)
+	Save(change *model.Change) error
 	ApplyChange(change *model.Change) error
 	ArchiveChange(change *model.Change) error
 }
