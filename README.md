@@ -1,13 +1,10 @@
 # teamWERX
 [![Release (goreleaser)](https://github.com/teamwerx/teamwerx/actions/workflows/release.yml/badge.svg)](https://github.com/teamwerx/teamwerx/actions/workflows/release.yml)
 
+See also: [Contributing (Go)](CONTRIBUTING-GO.md)
+
 ## Go CLI Installation
 
-> Legacy Node.js deprecation
->
-> The previous Node.js CLI has been archived and is no longer maintained in main. If you need it:
-> - node-final tag: https://github.com/teamwerx/teamwerx/tree/node-final
-> - legacy-node branch: https://github.com/teamwerx/teamwerx/tree/legacy-node
 
 > Release builds are published automatically via GoReleaser when tags (v*) are pushed. Download binaries from the GitHub Releases page.
 
