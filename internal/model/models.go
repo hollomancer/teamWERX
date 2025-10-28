@@ -61,6 +61,15 @@ type Requirement struct {
 	Start   int    `json:"-"` // Temporary field for parsing
 }
 
+// Scenario represents a behavior-driven scenario associated with a requirement or spec.
+type Scenario struct {
+	ID            string   `json:"id"`
+	Title         string   `json:"title"`
+	Steps         []string `json:"steps,omitempty"`
+	RequirementID string   `json:"requirement_id,omitempty"`
+	Content       string   `json:"content,omitempty"`
+}
+
 // Change represents a change proposal.
 type Change struct {
 	ID         string      `json:"id"`

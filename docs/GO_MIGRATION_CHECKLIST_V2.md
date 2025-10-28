@@ -12,7 +12,7 @@ This checklist provides an actionable roadmap for migrating `teamwerx` from Java
     -   `make lint` (using `golangci-lint`)
     -   `make clean`
 -   [x] **CI Pipeline:** Configure a GitHub Actions workflow to run `make test` and `make lint` on every push to `main` and on all pull requests.
--   [ ] **Library Selection:** Choose, document, and test core third-party libraries:
+-   [x] **Library Selection:** Choose, document, and test core third-party libraries:
     -   **CLI:** Cobra (`spf13/cobra`)
     -   **Styling:** `fatih/color` or similar.
     -   **Prompts:** `manifoldco/promptui` or `charmbracelet/bubbletea`.
@@ -21,7 +21,7 @@ This checklist provides an actionable roadmap for migrating `teamwerx` from Java
 
 *The goal of this phase is to define the architectural backbone before writing implementation logic.*
 
--   [ ] **Central Data Models:** In a new `internal/model` package, define the core `struct`s for all major entities:
+-   [x] **Central Data Models:** In a new `internal/model` package, define the core `struct`s for all major entities:
     -   `Project` / `Workspace` (to hold the application's loaded state)
     -   `Goal`
     -   `Plan` & `Task`
@@ -62,8 +62,8 @@ This checklist provides an actionable roadmap for migrating `teamwerx` from Java
 
 ### Phase 4: CLI Command Layer (Weeks 8-10)
 
--   [ ] **Cobra Setup:** Structure the CLI using Cobra in the `cmd/teamwerx/` directory (`root.go`, `goal.go`, etc.).
--   [ ] **Command Implementation:** Implement each CLI command. The primary responsibility of each command function should be:
+-   [x] **Cobra Setup:** Structure the CLI using Cobra in the `cmd/teamwerx/` directory (`root.go`, `goal.go`, etc.). (Initial CLI skeleton exists: root command and spec list using Cobra, fatih/color, and promptui.)
+-   [ ] **Command Implementation:** Implement each CLI command. The primary responsibility of each command function should be: (started: spec list, plan add)
     1.  Load the central `Project` state.
     2.  Call the appropriate manager methods via their interfaces.
     3.  Render output to the user using the styling and prompt utilities.

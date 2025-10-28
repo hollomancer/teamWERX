@@ -1,0 +1,11 @@
+{
+  "goal_id": "001-demo",
+  "tasks": [
+    {
+      "id": "T01",
+      "title": "Set up CI for Go",
+      "status": "pending"
+    }
+  ],
+  "updated_at": "2025-10-28T14:57:02.223061-04:00"
+}
