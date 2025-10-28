@@ -296,6 +296,11 @@ changesGroup
   .option("--update", "Update fingerprints to current values")
   .action((id, opts) => changesCommand.sync(id, opts));
 
+changesGroup
+  .command("resolve <change-id>")
+  .description("Resolve conflicts in a spec delta")
+  .action((id, opts) => changesCommand.resolve(id, opts));
+
 // Register 'specs' as a command group for specification management
 const specsGroup = program
   .command("specs")
