@@ -1,5 +1,123 @@
 # teamWERX
 
+## Go CLI Installation
+
+You can install and run the Go-based CLI in a few different ways. Choose the one that fits your workflow:
+
+- Using Go (quickest if you have Go installed):
+  - Go 1.18+ required
+  - Run:
+    - go install github.com/teamwerx/teamwerx/cmd/teamwerx@latest
+  - The binary will be placed in your GOPATH/bin (or GOBIN) and available on your PATH if configured.
+
+- From source (recommended for contributors):
+  - Clone this repository
+  - Build the CLI:
+    - make build
+    - or: go build -v -o teamwerx ./cmd/teamwerx
+
+- From releases (multi-platform archives):
+  - We use GoReleaser to publish macOS, Linux, and Windows archives.
+  - Download the archive for your OS/arch from the Releases page, extract, and place the teamwerx binary on your PATH.
+
+Notes:
+- The CLI is non-destructive by design and operates against a .teamwerx workspace in your project.
+- For non-interactive/CI runs, set TEAMWERX_CI=1 to disable prompts.
+
+## Go CLI Usage
+
+Below are common tasks and example commands. All commands accept base directory flags so you can target different workspaces if needed.
+
+Workspace flags (optional, default to .teamwerx/*):
+- --specs-dir: defaults to .teamwerx/specs
+- --goals-dir: defaults to .teamwerx/goals
+- --changes-dir: defaults to .teamwerx/changes
+
+Tip: add TEAMWERX_CI=1 to skip interactive prompts in scripts.
+
+### Specs
+
+List all specs:
+- TEAMWERX_CI=1 teamwerx spec list --specs-dir .teamwerx/specs
+
+Show a specific spec summary (first 10 requirements):
+- TEAMWERX_CI=1 teamwerx spec show auth --specs-dir .teamwerx/specs
+
+### Plans
+
+Add a task to a goal’s plan:
+- TEAMWERX_CI=1 teamwerx plan add --goals-dir .teamwerx/goals --goal 001-demo "Set up CI"
+
+List tasks for a goal:
+- TEAMWERX_CI=1 teamwerx plan list --goals-dir .teamwerx/goals --goal 001-demo
+
+Complete a task:
+- TEAMWERX_CI=1 teamwerx plan complete --goals-dir .teamwerx/goals --goal 001-demo --task T01
+
+Show plan details:
+- TEAMWERX_CI=1 teamwerx plan show --goals-dir .teamwerx/goals --goal 001-demo
+
+### Discussions
+
+Add a discussion entry to a goal:
+- TEAMWERX_CI=1 teamwerx discuss add --goals-dir .teamwerx/goals --goal 001-demo "Initial planning notes"
+
+List discussion entries:
+- TEAMWERX_CI=1 teamwerx discuss list --goals-dir .teamwerx/goals --goal 001-demo
+
+### Changes
+
+List changes:
+- TEAMWERX_CI=1 teamwerx change list --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs
+
+Apply a change (may detect conflicts):
+- TEAMWERX_CI=1 teamwerx change apply --id CH-123 --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs
+
+Resolve conflicts interactively (refresh base fingerprints or skip domains, then re-apply):
+- TEAMWERX_CI=1 teamwerx change resolve --id CH-123 --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs
+
+Archive a change after it’s applied:
+- TEAMWERX_CI=1 teamwerx change archive --id CH-123 --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs
+
+### Migration Check
+
+Validate that your existing .teamwerx workspace is compatible:
+- TEAMWERX_CI=1 teamwerx migrate check \
+  --specs-dir .teamwerx/specs \
+  --goals-dir .teamwerx/goals \
+  --changes-dir .teamwerx/changes
+
+This will parse specs, plans, discussions, and changes, then report any issues.
+
+### Shell Completions
+
+Generate completion scripts for your shell (bash|zsh|fish|powershell):
+- teamwerx completion bash
+- teamwerx completion zsh
+- teamwerx completion fish
+- teamwerx completion powershell
+
+Load or install the output according to your shell’s recommended approach.
+
+### Non-Interactive Mode
+
+Set TEAMWERX_CI=1 to disable interactive prompts and use defaults within commands. This is helpful for CI/CD or scripted runs:
+- TEAMWERX_CI=1 teamwerx spec list
+- TEAMWERX_CI=1 teamwerx plan add --goal 001-demo "Automated task"
+
+### Building From Source (Developers)
+
+- Prerequisites: Go 1.18+
+- Build:
+  - make build
+  - or: go build -v -o teamwerx ./cmd/teamwerx
+- Test:
+  - make test
+- Lint:
+  - Ensure golangci-lint is installed, then: make lint
+
+For releases, we use GoReleaser with a multi-platform configuration. CI builds and publishes archives on tagged releases.
+
 A development framework for individual developers working with multiple AI agents.
 
 ## Overview
