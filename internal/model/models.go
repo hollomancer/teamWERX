@@ -73,7 +73,7 @@ type Scenario struct {
 // Change represents a change proposal.
 type Change struct {
 	ID         string      `json:"id"`
-	Title      string      `json`
+	Title      string      `json:"title"`
 	Status     string      `json:"status"`
 	GoalID     string      `json:"goal_id"`
 	CreatedAt  time.Time   `json:"created_at"`
