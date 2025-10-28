@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/manifoldco/promptui"
-	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"github.com/teamwerx/teamwerx/internal/core"
 	"github.com/teamwerx/teamwerx/internal/model"
@@ -47,6 +45,18 @@ var (
 		Short: "Add a task to a goal's plan",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  runPlanAdd,
+	}
+
+	planListCmd = &cobra.Command{
+		Use:   "list",
+		Short: "List tasks for a goal's plan",
+		RunE:  runPlanList,
+	}
+
+	planCompleteCmd = &cobra.Command{
+		Use:   "complete",
+		Short: "Mark a plan task as completed",
+		RunE:  runPlanComplete,
 	}
 
 	changeCmd = &cobra.Command{
@@ -92,12 +102,20 @@ var (
 		RunE:  runDiscussAdd,
 	}
 
+	completionCmd = &cobra.Command{
+		Use:   "completion [bash|zsh|fish|powershell]",
+		Short: "Generate shell completion scripts",
+		Args:  cobra.ExactArgs(1),
+		RunE:  runCompletion,
+	}
+
 	// Flags
 	specsBaseDir   string
 	goalsBaseDir   string
 	goalID         string
 	changesBaseDir string
 	changeID       string
+	taskID         string
 )
 
 // Execute runs the root command (to be called by main in future integration).
@@ -113,6 +131,8 @@ func init() {
 	// Attach plan hierarchy: root -> plan -> add
 	rootCmd.AddCommand(planCmd)
 	planCmd.AddCommand(planAddCmd)
+	planCmd.AddCommand(planListCmd)
+	planCmd.AddCommand(planCompleteCmd)
 
 	// Attach change hierarchy: root -> change -> [list|apply|archive]
 	rootCmd.AddCommand(changeCmd)
@@ -124,6 +144,9 @@ func init() {
 	rootCmd.AddCommand(discussCmd)
 	discussCmd.AddCommand(discussListCmd)
 	discussCmd.AddCommand(discussAddCmd)
+
+	// Completion command
+	rootCmd.AddCommand(completionCmd)
 
 	// Flags for discuss
 	discussCmd.PersistentFlags().StringVar(&goalsBaseDir, "goals-dir", ".teamwerx/goals", "Base directory containing goals")
@@ -138,6 +161,14 @@ func init() {
 	planAddCmd.Flags().StringVar(&goalID, "goal", "", "Goal ID to add the task to")
 	_ = planAddCmd.MarkFlagRequired("goal")
 
+	planListCmd.Flags().StringVar(&goalID, "goal", "", "Goal ID to list tasks for")
+	_ = planListCmd.MarkFlagRequired("goal")
+
+	planCompleteCmd.Flags().StringVar(&goalID, "goal", "", "Goal ID")
+	planCompleteCmd.Flags().StringVar(&taskID, "task", "", "Task ID to complete (e.g., T01)")
+	_ = planCompleteCmd.MarkFlagRequired("goal")
+	_ = planCompleteCmd.MarkFlagRequired("task")
+
 	changeCmd.PersistentFlags().StringVar(&changesBaseDir, "changes-dir", ".teamwerx/changes", "Base directory containing changes")
 	changeApplyCmd.Flags().StringVar(&changeID, "id", "", "Change ID to apply")
 	_ = changeApplyCmd.MarkFlagRequired("id")
@@ -146,25 +177,12 @@ func init() {
 }
 
 func runSpecList(cmd *cobra.Command, args []string) error {
-	// In non-interactive or CI environments, skip prompt and proceed
-	isCI := os.Getenv("TEAMWERX_CI") != ""
-	isTTY := isatty.IsTerminal(os.Stdout.Fd()) || isatty.IsCygwinTerminal(os.Stdout.Fd())
-	if !(isCI || !isTTY) {
-		// Prompt user to confirm or cancel
-		actionPrompt := promptui.Select{
-			Label: "Select action",
-			Items: []string{"List specs", "Cancel"},
-			Size:  2,
-		}
-
-		choiceIdx, choice, err := actionPrompt.Run()
-		if err != nil {
-			return fmt.Errorf("prompt failed: %w", err)
-		}
-		if choiceIdx != 0 || choice != "List specs" {
-			color.Yellow("Cancelled.")
-			return nil
-		}
+	// Prompt user to confirm or cancel (defaults to List specs in non-interactive environments)
+	if idx, choice, err := promptutil.Select("Select action", []string{"List specs", "Cancel"}, 0); err != nil {
+		return fmt.Errorf("prompt failed: %w", err)
+	} else if idx != 0 || choice != "List specs" {
+		color.Yellow("Cancelled.")
+		return nil
 	}
 
 	// Proceed to list specs
@@ -240,6 +258,80 @@ func runPlanAdd(cmd *cobra.Command, args []string) error {
 	}
 
 	color.New(color.FgGreen).Printf("Added task to goal %s: %s\n", goalID, title)
+	return nil
+}
+
+func runPlanList(cmd *cobra.Command, args []string) error {
+	if strings.TrimSpace(goalID) == "" {
+		return fmt.Errorf("goal id is required")
+	}
+
+	app, err := core.NewApp(core.AppOptions{
+		SpecsDir:   specsBaseDir,
+		GoalsDir:   goalsBaseDir,
+		ChangesDir: changesBaseDir,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to init app: %w", err)
+	}
+
+	plan, err := app.PlanManager.Load(goalID)
+	if err != nil {
+		color.Yellow("No plan found for goal %s.", goalID)
+		return nil
+	}
+
+	ok := color.New(color.FgGreen, color.Bold)
+	ok.Printf("Tasks for goal %s (%d):\n", goalID, len(plan.Tasks))
+	for _, t := range plan.Tasks {
+		status := t.Status
+		if strings.TrimSpace(status) == "" {
+			status = "pending"
+		}
+		fmt.Printf("- %s [%s] %s\n", t.ID, status, t.Title)
+	}
+	return nil
+}
+
+func runPlanComplete(cmd *cobra.Command, args []string) error {
+	if strings.TrimSpace(goalID) == "" {
+		return fmt.Errorf("goal id is required")
+	}
+	if strings.TrimSpace(taskID) == "" {
+		return fmt.Errorf("task id is required")
+	}
+
+	app, err := core.NewApp(core.AppOptions{
+		SpecsDir:   specsBaseDir,
+		GoalsDir:   goalsBaseDir,
+		ChangesDir: changesBaseDir,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to init app: %w", err)
+	}
+
+	plan, err := app.PlanManager.Load(goalID)
+	if err != nil {
+		return fmt.Errorf("failed to load plan: %w", err)
+	}
+
+	found := false
+	for i := range plan.Tasks {
+		if strings.EqualFold(plan.Tasks[i].ID, taskID) {
+			plan.Tasks[i].Status = "completed"
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("task %s not found in goal %s", taskID, goalID)
+	}
+
+	if err := app.PlanManager.Save(plan); err != nil {
+		return fmt.Errorf("failed to save plan: %w", err)
+	}
+
+	color.New(color.FgGreen).Printf("Marked task %s as completed for goal %s\n", taskID, goalID)
 	return nil
 }
 
@@ -415,4 +507,22 @@ func runDiscussAdd(cmd *cobra.Command, args []string) error {
 
 	color.New(color.FgGreen).Printf("Added discussion entry %s to goal %s\n", entry.ID, goalID)
 	return nil
+}
+
+func runCompletion(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return fmt.Errorf("one shell must be specified: bash|zsh|fish|powershell")
+	}
+	switch args[0] {
+	case "bash":
+		return rootCmd.GenBashCompletion(os.Stdout)
+	case "zsh":
+		return rootCmd.GenZshCompletion(os.Stdout)
+	case "fish":
+		return rootCmd.GenFishCompletion(os.Stdout, true)
+	case "powershell":
+		return rootCmd.GenPowerShellCompletionWithDesc(os.Stdout)
+	default:
+		return fmt.Errorf("unsupported shell: %s", args[0])
+	}
 }

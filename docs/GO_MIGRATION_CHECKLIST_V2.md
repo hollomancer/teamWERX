@@ -63,12 +63,12 @@ This checklist provides an actionable roadmap for migrating `teamwerx` from Java
 ### Phase 4: CLI Command Layer (Weeks 8-10)
 
 -   [x] **Cobra Setup:** Structure the CLI using Cobra in the `cmd/teamwerx/` directory (`root.go`, `goal.go`, etc.). (Initial CLI skeleton exists: root command and spec list using Cobra, fatih/color, and promptui.)
--   [ ] **Command Implementation:** Implement each CLI command. The primary responsibility of each command function should be: (started: spec list, plan add, change list/apply/archive, discuss list/add)
+-   [ ] **Command Implementation:** Implement each CLI command. The primary responsibility of each command function should be: (started: spec list, plan add/list/complete, change list/apply/archive, discuss list/add)
     1.  Load the central `Project` state.
     2.  Call the appropriate manager methods via their interfaces.
     3.  Render output to the user using the styling and prompt utilities.
 -   [ ] **Port `changes resolve`:** Re-implement the interactive conflict resolution command.
--   [ ] **Shell Completions:** Generate and test shell completion scripts using Cobra's built-in functionality.
+-   [x] **Shell Completions:** Generate and test shell completion scripts using Cobra's built-in functionality. (completion command added and tested)
 
 ### Phase 5: Testing, Documentation & Release (Weeks 11-12)
 
