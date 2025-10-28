@@ -11,7 +11,7 @@ This checklist provides an actionable roadmap for migrating `teamwerx` from Java
     -   `make test`
     -   `make lint` (using `golangci-lint`)
     -   `make clean`
--   [x] **CI Pipeline:** Configure a GitHub Actions workflow to run `make test` and `make lint` on every push to `main` and on all pull requests.
+-   [x] **CI Pipeline:** GitHub Actions workflow builds the CLI, runs `make test`, installs and runs `golangci-lint`, and supports manual runs via `workflow_dispatch`; triggers on push/PR to `main` and `go`.
 -   [x] **Library Selection:** Choose, document, and test core third-party libraries:
     -   **CLI:** Cobra (`spf13/cobra`)
     -   **Styling:** `fatih/color` or similar.
