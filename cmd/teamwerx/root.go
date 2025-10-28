@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/manifoldco/promptui"
@@ -11,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/teamwerx/teamwerx/internal/core"
 	"github.com/teamwerx/teamwerx/internal/model"
+	promptutil "github.com/teamwerx/teamwerx/internal/utils/prompt"
 )
 
 var (
@@ -71,6 +73,25 @@ var (
 		RunE:  runChangeArchive,
 	}
 
+	discussCmd = &cobra.Command{
+		Use:   "discuss",
+		Short: "Work with discussions",
+		Long:  "Commands for listing and adding discussion entries.",
+	}
+
+	discussListCmd = &cobra.Command{
+		Use:   "list",
+		Short: "List discussion entries for a goal",
+		RunE:  runDiscussList,
+	}
+
+	discussAddCmd = &cobra.Command{
+		Use:   "add",
+		Short: "Add a discussion entry to a goal",
+		Args:  cobra.ArbitraryArgs,
+		RunE:  runDiscussAdd,
+	}
+
 	// Flags
 	specsBaseDir   string
 	goalsBaseDir   string
@@ -98,6 +119,18 @@ func init() {
 	changeCmd.AddCommand(changeListCmd)
 	changeCmd.AddCommand(changeApplyCmd)
 	changeCmd.AddCommand(changeArchiveCmd)
+
+	// Attach discuss hierarchy: root -> discuss -> [list|add]
+	rootCmd.AddCommand(discussCmd)
+	discussCmd.AddCommand(discussListCmd)
+	discussCmd.AddCommand(discussAddCmd)
+
+	// Flags for discuss
+	discussCmd.PersistentFlags().StringVar(&goalsBaseDir, "goals-dir", ".teamwerx/goals", "Base directory containing goals")
+	discussListCmd.Flags().StringVar(&goalID, "goal", "", "Goal ID")
+	_ = discussListCmd.MarkFlagRequired("goal")
+	discussAddCmd.Flags().StringVar(&goalID, "goal", "", "Goal ID")
+	_ = discussAddCmd.MarkFlagRequired("goal")
 
 	// Flags
 	specCmd.PersistentFlags().StringVar(&specsBaseDir, "specs-dir", ".teamwerx/specs", "Base directory containing spec domains")
@@ -138,8 +171,15 @@ func runSpecList(cmd *cobra.Command, args []string) error {
 	hdr := color.New(color.FgCyan, color.Bold)
 	hdr.Printf("Scanning specs directory: %s\n", specsBaseDir)
 
-	specManager := core.NewSpecManager(specsBaseDir)
-	specs, err := specManager.ListSpecs()
+	app, err := core.NewApp(core.AppOptions{
+		SpecsDir:   specsBaseDir,
+		GoalsDir:   goalsBaseDir,
+		ChangesDir: changesBaseDir,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to init app: %w", err)
+	}
+	specs, err := app.SpecManager.ListSpecs()
 	if err != nil {
 		return fmt.Errorf("failed to list specs: %w", err)
 	}
@@ -174,10 +214,17 @@ func runPlanAdd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("task title cannot be empty")
 	}
 
-	pm := core.NewPlanManager(goalsBaseDir)
+	app, err := core.NewApp(core.AppOptions{
+		SpecsDir:   specsBaseDir,
+		GoalsDir:   goalsBaseDir,
+		ChangesDir: changesBaseDir,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to init app: %w", err)
+	}
 
 	// Try to load existing plan; if not found, start a new one.
-	plan, err := pm.Load(goalID)
+	plan, err := app.PlanManager.Load(goalID)
 	if err != nil {
 		plan = &model.Plan{
 			GoalID: goalID,
@@ -185,10 +232,10 @@ func runPlanAdd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if _, err := pm.AddTask(plan, title); err != nil {
+	if _, err := app.PlanManager.AddTask(plan, title); err != nil {
 		return err
 	}
-	if err := pm.Save(plan); err != nil {
+	if err := app.PlanManager.Save(plan); err != nil {
 		return err
 	}
 
@@ -197,11 +244,15 @@ func runPlanAdd(cmd *cobra.Command, args []string) error {
 }
 
 func runChangeList(cmd *cobra.Command, args []string) error {
-	sm := core.NewSpecManager(specsBaseDir)
-	merger := core.NewSpecMerger(sm)
-	cm := core.NewChangeManager(changesBaseDir, sm, merger)
-
-	changes, err := cm.ListChanges()
+	app, err := core.NewApp(core.AppOptions{
+		SpecsDir:   specsBaseDir,
+		GoalsDir:   goalsBaseDir,
+		ChangesDir: changesBaseDir,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to init app: %w", err)
+	}
+	changes, err := app.ChangeManager.ListChanges()
 	if err != nil {
 		return fmt.Errorf("failed to list changes: %w", err)
 	}
@@ -228,15 +279,20 @@ func runChangeApply(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("change id is required")
 	}
 
-	sm := core.NewSpecManager(specsBaseDir)
-	merger := core.NewSpecMerger(sm)
-	cm := core.NewChangeManager(changesBaseDir, sm, merger)
+	app, err := core.NewApp(core.AppOptions{
+		SpecsDir:   specsBaseDir,
+		GoalsDir:   goalsBaseDir,
+		ChangesDir: changesBaseDir,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to init app: %w", err)
+	}
 
-	ch, err := cm.ReadChange(changeID)
+	ch, err := app.ChangeManager.ReadChange(changeID)
 	if err != nil {
 		return fmt.Errorf("failed to read change: %w", err)
 	}
-	if err := cm.ApplyChange(ch); err != nil {
+	if err := app.ChangeManager.ApplyChange(ch); err != nil {
 		return fmt.Errorf("failed to apply change: %w", err)
 	}
 
@@ -249,18 +305,114 @@ func runChangeArchive(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("change id is required")
 	}
 
-	sm := core.NewSpecManager(specsBaseDir)
-	merger := core.NewSpecMerger(sm)
-	cm := core.NewChangeManager(changesBaseDir, sm, merger)
+	app, err := core.NewApp(core.AppOptions{
+		SpecsDir:   specsBaseDir,
+		GoalsDir:   goalsBaseDir,
+		ChangesDir: changesBaseDir,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to init app: %w", err)
+	}
 
-	ch, err := cm.ReadChange(changeID)
+	ch, err := app.ChangeManager.ReadChange(changeID)
 	if err != nil {
 		return fmt.Errorf("failed to read change: %w", err)
 	}
-	if err := cm.ArchiveChange(ch); err != nil {
+	if err := app.ChangeManager.ArchiveChange(ch); err != nil {
 		return fmt.Errorf("failed to archive change: %w", err)
 	}
 
 	color.New(color.FgGreen).Printf("Archived change %s: %s\n", ch.ID, ch.Title)
+	return nil
+}
+
+func runDiscussList(cmd *cobra.Command, args []string) error {
+	if strings.TrimSpace(goalID) == "" {
+		return fmt.Errorf("goal id is required")
+	}
+
+	app, err := core.NewApp(core.AppOptions{
+		SpecsDir:   specsBaseDir,
+		GoalsDir:   goalsBaseDir,
+		ChangesDir: changesBaseDir,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to init app: %w", err)
+	}
+
+	entries, err := app.DiscussionManager.Load(goalID)
+	if err != nil {
+		return fmt.Errorf("failed to load discussion entries: %w", err)
+	}
+
+	if len(entries) == 0 {
+		color.Yellow("No discussion entries found for goal %s.", goalID)
+		return nil
+	}
+
+	hdr := color.New(color.FgGreen, color.Bold)
+	hdr.Printf("Found %d discussion entrie(s) for goal %s:\n", len(entries), goalID)
+
+	for _, e := range entries {
+		title := color.New(color.FgWhite, color.Bold)
+		title.Printf("- %s ", e.ID)
+		fmt.Printf("[%s] ", strings.TrimSpace(e.Type))
+		if !e.Timestamp.IsZero() {
+			fmt.Printf("%s ", e.Timestamp.Format(time.RFC3339))
+		}
+		// Print first line of content as a preview
+		firstLine := strings.SplitN(strings.TrimSpace(e.Content), "\n", 2)[0]
+		if firstLine != "" {
+			fmt.Printf("- %s", firstLine)
+		}
+		fmt.Println()
+	}
+
+	return nil
+}
+
+func runDiscussAdd(cmd *cobra.Command, args []string) error {
+	if strings.TrimSpace(goalID) == "" {
+		return fmt.Errorf("goal id is required")
+	}
+
+	app, err := core.NewApp(core.AppOptions{
+		SpecsDir:   specsBaseDir,
+		GoalsDir:   goalsBaseDir,
+		ChangesDir: changesBaseDir,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to init app: %w", err)
+	}
+
+	// Determine message content
+	message := strings.TrimSpace(strings.Join(args, " "))
+	if message == "" {
+		if v, perr := promptutil.Input("Discussion message", ""); perr == nil {
+			message = strings.TrimSpace(v)
+		} else {
+			return fmt.Errorf("failed to prompt for message: %w", perr)
+		}
+	}
+	if message == "" {
+		return fmt.Errorf("discussion message cannot be empty")
+	}
+
+	// Determine entry type (discussion|reflection)
+	entryType := "discussion"
+	types := []string{"discussion", "reflection"}
+	if idx, choice, _ := promptutil.Select("Entry type", types, 0); idx >= 0 && choice != "" {
+		entryType = choice
+	}
+
+	entry := model.DiscussionEntry{
+		Type:    entryType,
+		Content: message,
+	}
+	if err := app.DiscussionManager.AddEntry(goalID, &entry); err != nil {
+		return fmt.Errorf("failed to add discussion entry: %w", err)
+	}
+
+	color.New(color.FgGreen).Printf("Added discussion entry %s to goal %s\n", entry.ID, goalID)
 	return nil
 }

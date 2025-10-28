@@ -51,19 +51,19 @@ This checklist provides an actionable roadmap for migrating `teamwerx` from Java
 
 ### Phase 3: Core Logic & Utilities (Weeks 5-7)
 
--   [ ] **Utility Implementation:** Port the JavaScript utilities to Go, ensuring they use the new custom error package. (started: file, git)
+-   [x] **Utility Implementation:** Port the JavaScript utilities to Go, ensuring they use the new custom error package. (completed: file, git, prompt)
     -   `internal/utils/file`
     -   `internal/utils/git`
     -   `internal/utils/prompt`
 -   [x] **PlanManager Implementation:** Implement the `PlanManager` interface. It should operate on the `Plan` struct within the central `Project` model.
 -   [x] **ChangeManager Implementation:** Implement the `ChangeManager` interface.
--   [ ] **Remaining Managers:** Implement all other core manager interfaces.
--   [ ] **Dependency Injection:** Ensure managers are instantiated correctly, receiving their dependencies (other managers) via the defined interfaces.
+-   [x] **Remaining Managers:** Implement all other core manager interfaces.
+-   [x] **Dependency Injection:** Ensure managers are instantiated correctly, receiving their dependencies (other managers) via the defined interfaces. (App DI container added)
 
 ### Phase 4: CLI Command Layer (Weeks 8-10)
 
 -   [x] **Cobra Setup:** Structure the CLI using Cobra in the `cmd/teamwerx/` directory (`root.go`, `goal.go`, etc.). (Initial CLI skeleton exists: root command and spec list using Cobra, fatih/color, and promptui.)
--   [ ] **Command Implementation:** Implement each CLI command. The primary responsibility of each command function should be: (started: spec list, plan add)
+-   [ ] **Command Implementation:** Implement each CLI command. The primary responsibility of each command function should be: (started: spec list, plan add, change list/apply/archive, discuss list/add)
     1.  Load the central `Project` state.
     2.  Call the appropriate manager methods via their interfaces.
     3.  Render output to the user using the styling and prompt utilities.
