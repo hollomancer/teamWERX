@@ -47,10 +47,36 @@ var (
 		RunE:  runPlanAdd,
 	}
 
+	changeCmd = &cobra.Command{
+		Use:   "change",
+		Short: "Work with changes",
+		Long:  "Commands for listing, applying, and archiving changes.",
+	}
+
+	changeListCmd = &cobra.Command{
+		Use:   "list",
+		Short: "List changes",
+		RunE:  runChangeList,
+	}
+
+	changeApplyCmd = &cobra.Command{
+		Use:   "apply",
+		Short: "Apply a change by ID",
+		RunE:  runChangeApply,
+	}
+
+	changeArchiveCmd = &cobra.Command{
+		Use:   "archive",
+		Short: "Archive a change by ID",
+		RunE:  runChangeArchive,
+	}
+
 	// Flags
-	specsBaseDir string
-	goalsBaseDir string
-	goalID       string
+	specsBaseDir   string
+	goalsBaseDir   string
+	goalID         string
+	changesBaseDir string
+	changeID       string
 )
 
 // Execute runs the root command (to be called by main in future integration).
@@ -67,11 +93,23 @@ func init() {
 	rootCmd.AddCommand(planCmd)
 	planCmd.AddCommand(planAddCmd)
 
+	// Attach change hierarchy: root -> change -> [list|apply|archive]
+	rootCmd.AddCommand(changeCmd)
+	changeCmd.AddCommand(changeListCmd)
+	changeCmd.AddCommand(changeApplyCmd)
+	changeCmd.AddCommand(changeArchiveCmd)
+
 	// Flags
 	specCmd.PersistentFlags().StringVar(&specsBaseDir, "specs-dir", ".teamwerx/specs", "Base directory containing spec domains")
 	planCmd.PersistentFlags().StringVar(&goalsBaseDir, "goals-dir", ".teamwerx/goals", "Base directory containing goals")
 	planAddCmd.Flags().StringVar(&goalID, "goal", "", "Goal ID to add the task to")
 	_ = planAddCmd.MarkFlagRequired("goal")
+
+	changeCmd.PersistentFlags().StringVar(&changesBaseDir, "changes-dir", ".teamwerx/changes", "Base directory containing changes")
+	changeApplyCmd.Flags().StringVar(&changeID, "id", "", "Change ID to apply")
+	_ = changeApplyCmd.MarkFlagRequired("id")
+	changeArchiveCmd.Flags().StringVar(&changeID, "id", "", "Change ID to archive")
+	_ = changeArchiveCmd.MarkFlagRequired("id")
 }
 
 func runSpecList(cmd *cobra.Command, args []string) error {
@@ -155,5 +193,74 @@ func runPlanAdd(cmd *cobra.Command, args []string) error {
 	}
 
 	color.New(color.FgGreen).Printf("Added task to goal %s: %s\n", goalID, title)
+	return nil
+}
+
+func runChangeList(cmd *cobra.Command, args []string) error {
+	sm := core.NewSpecManager(specsBaseDir)
+	merger := core.NewSpecMerger(sm)
+	cm := core.NewChangeManager(changesBaseDir, sm, merger)
+
+	changes, err := cm.ListChanges()
+	if err != nil {
+		return fmt.Errorf("failed to list changes: %w", err)
+	}
+
+	if len(changes) == 0 {
+		color.Yellow("No changes found.")
+		return nil
+	}
+
+	ok := color.New(color.FgGreen, color.Bold)
+	ok.Printf("Found %d change(s):\n", len(changes))
+	for _, ch := range changes {
+		title := color.New(color.FgWhite, color.Bold)
+		title.Printf("- ID: %s\n", ch.ID)
+		fmt.Printf("  Title: %s\n", ch.Title)
+		fmt.Printf("  Status: %s\n", ch.Status)
+		fmt.Printf("  Spec deltas: %d\n", len(ch.SpecDeltas))
+	}
+	return nil
+}
+
+func runChangeApply(cmd *cobra.Command, args []string) error {
+	if strings.TrimSpace(changeID) == "" {
+		return fmt.Errorf("change id is required")
+	}
+
+	sm := core.NewSpecManager(specsBaseDir)
+	merger := core.NewSpecMerger(sm)
+	cm := core.NewChangeManager(changesBaseDir, sm, merger)
+
+	ch, err := cm.ReadChange(changeID)
+	if err != nil {
+		return fmt.Errorf("failed to read change: %w", err)
+	}
+	if err := cm.ApplyChange(ch); err != nil {
+		return fmt.Errorf("failed to apply change: %w", err)
+	}
+
+	color.New(color.FgGreen).Printf("Applied change %s: %s\n", ch.ID, ch.Title)
+	return nil
+}
+
+func runChangeArchive(cmd *cobra.Command, args []string) error {
+	if strings.TrimSpace(changeID) == "" {
+		return fmt.Errorf("change id is required")
+	}
+
+	sm := core.NewSpecManager(specsBaseDir)
+	merger := core.NewSpecMerger(sm)
+	cm := core.NewChangeManager(changesBaseDir, sm, merger)
+
+	ch, err := cm.ReadChange(changeID)
+	if err != nil {
+		return fmt.Errorf("failed to read change: %w", err)
+	}
+	if err := cm.ArchiveChange(ch); err != nil {
+		return fmt.Errorf("failed to archive change: %w", err)
+	}
+
+	color.New(color.FgGreen).Printf("Archived change %s: %s\n", ch.ID, ch.Title)
 	return nil
 }
