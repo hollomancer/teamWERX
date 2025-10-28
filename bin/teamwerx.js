@@ -252,7 +252,9 @@ program
 // Register 'changes' as a command group so subcommands parse their own options correctly
 const changesGroup = program
   .command("changes")
-  .description("Change management commands (list, show, apply, archive, sync)");
+  .description(
+    "Change management commands (list, show, validate, apply, archive, sync)"
+  );
 
 changesGroup
   .command("list")
@@ -263,6 +265,11 @@ changesGroup
   .command("show <change-id>")
   .description("Show change details")
   .action((id, opts) => changesCommand.show(id, opts));
+
+changesGroup
+  .command("validate <change-id>")
+  .description("Validate change structure and spec deltas")
+  .action((id, opts) => changesCommand.validate(id, opts));
 
 changesGroup
   .command("apply <change-id>")
