@@ -29,6 +29,7 @@ func (p *SpecParser) Parse(content []byte) (*model.Spec, error) {
 
 	spec := &model.Spec{
 		Content: string(content),
+		AST:     node,
 	}
 
 	var requirements []model.Requirement

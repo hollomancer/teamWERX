@@ -4,14 +4,14 @@ This checklist provides an actionable roadmap for migrating `teamwerx` from Java
 
 ### Phase 0: Foundation & Tooling (Week 0)
 
--   [ ] **Project Setup:** Initialize Go module (`go mod init`).
--   [ ] **Directory Structure:** Create the initial directory structure (`cmd/teamwerx`, `internal/core`, `internal/utils`, `internal/model`).
--   [ ] **Makefile:** Create a `Makefile` with essential targets:
+-   [x] **Project Setup:** Initialize Go module (`go mod init`).
+-   [x] **Directory Structure:** Create the initial directory structure (`cmd/teamwerx`, `internal/core`, `internal/utils`, `internal/model`).
+-   [x] **Makefile:** Create a `Makefile` with essential targets:
     -   `make build`
     -   `make test`
     -   `make lint` (using `golangci-lint`)
     -   `make clean`
--   [ ] **CI Pipeline:** Configure a GitHub Actions workflow to run `make test` and `make lint` on every push to `main` and on all pull requests.
+-   [x] **CI Pipeline:** Configure a GitHub Actions workflow to run `make test` and `make lint` on every push to `main` and on all pull requests.
 -   [ ] **Library Selection:** Choose, document, and test core third-party libraries:
     -   **CLI:** Cobra (`spf13/cobra`)
     -   **Styling:** `fatih/color` or similar.
@@ -28,26 +28,26 @@ This checklist provides an actionable roadmap for migrating `teamwerx` from Java
     -   `Spec`, `Requirement`, `Scenario`
     -   `Change`, `SpecDelta`
     -   `DiscussionEntry`
--   [ ] **Manager Interfaces:** In the `internal/core` package, define the Go `interface` for each manager, specifying its public methods.
+-   [x] **Manager Interfaces:** In the `internal/core` package, define the Go `interface` for each manager, specifying its public methods.
     -   `SpecManager`
     -   `PlanManager`
     -   `ChangeManager`
     -   `SpecMerger`
     -   `DiscussionManager`
--   [ ] **Custom Error Package:** Create an `internal/errors` package with typed errors (e.g., `ErrConflict`, `ErrNotFound`, `ErrDiverged`).
+-   [x] **Custom Error Package:** Create an `internal/errors` package with typed errors (e.g., `ErrConflict`, `ErrNotFound`, `ErrDiverged`).
 
 ### Phase 2: The "Spec" Subsystem (Weeks 2-4)
 
 *This is the most complex part of the migration. Tackling it early with a more robust approach is critical.*
 
--   [ ] **Markdown AST Library:** Research, select, and test a Go Markdown AST library (e.g., `yuin/goldmark`).
+-   [x] **Markdown AST Library:** Research, select, and test a Go Markdown AST library (e.g., `yuin/goldmark`).
 -   [ ] **Spec Parser/Serializer:**
-    -   [ ] Implement a `SpecParser` that reads a `.md` file and populates the `model.Spec` struct, including the full AST of the content.
-    -   [ ] Implement a `SpecSerializer` that writes a `model.Spec` struct (including its AST) back to a markdown file.
--   [ ] **`SpecManager` Implementation:** Implement the `SpecManager` interface using the new parser and serializer.
--   [ ] **`SpecMerger` Re-implementation:**
-    -   [ ] Re-implement the merge logic (`_applyOperations`, `_autoMerge`) to operate on the Markdown AST, not raw text.
-    -   [ ] Write comprehensive unit tests covering various merge and conflict scenarios. This is a critical checkpoint.
+    -   [x] Implement a `SpecParser` that reads a `.md` file and populates the `model.Spec` struct, including the full AST of the content.
+    -   [x] Implement a `SpecSerializer` that writes a `model.Spec` struct (including its AST) back to a markdown file.
+-   [x] **`SpecManager` Implementation:** Implement the `SpecManager` interface using the new parser and serializer.
+-   [x] **`SpecMerger` Re-implementation:**
+    -   [x] Re-implement the merge logic (`_applyOperations`, `_autoMerge`) to operate on the Markdown AST, not raw text.
+    -   [x] Write comprehensive unit tests covering various merge and conflict scenarios. This is a critical checkpoint.
 
 ### Phase 3: Core Logic & Utilities (Weeks 5-7)
 

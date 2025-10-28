@@ -75,7 +75,24 @@ func (m *specManager) WriteSpec(spec *model.Spec) error {
 		return err
 	}
 
-	return ioutil.WriteFile(path, content, 0644)
+	if err := ioutil.WriteFile(path, content, 0644); err != nil {
+		return err
+	}
+
+	// Re-parse to refresh AST and normalize content/requirements; update fingerprint.
+	if parsed, perr := m.parser.Parse(content); perr == nil && spec != nil {
+		parsed.Domain = spec.Domain
+		// Update the original spec in memory to reflect canonical state post-write.
+		spec.Content = parsed.Content
+		spec.Requirements = parsed.Requirements
+		spec.AST = parsed.AST
+	}
+	// Always refresh fingerprint based on final content.
+	if spec != nil {
+		spec.Fingerprint = utils.GenerateFingerprint(string(content))
+	}
+
+	return nil
 }
 
 // ListSpecs lists all available specs.

@@ -1,6 +1,10 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/yuin/goldmark/ast"
+)
 
 // Project represents the central application state, holding all loaded data.
 type Project struct {
@@ -46,6 +50,7 @@ type Spec struct {
 	Content      string        `json:"content"`
 	Fingerprint  string        `json:"fingerprint"`
 	Requirements []Requirement `json:"requirements"`
+	AST          ast.Node      `json:"-"`
 }
 
 // Requirement represents a single requirement within a spec.
