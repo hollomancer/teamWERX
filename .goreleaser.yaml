@@ -1,0 +1,76 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+version: 2
+
+project_name: teamwerx
+dist: dist
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: teamwerx
+    main: ./cmd/teamwerx
+    binary: teamwerx
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+    mod_timestamp: "{{ .CommitDate }}"
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    # Keep for future expansion if needed on ARM v7:
+    goarm:
+      - "7"
+
+archives:
+  - id: default
+    builds:
+      - teamwerx
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+      - docs/**
+
+checksum:
+  name_template: "{{ .ProjectName }}_checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
+
+changelog:
+  use: git
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+      - "^refactor:"
+
+release:
+  draft: true       # set to false once you're ready to auto-publish
+  prerelease: auto  # mark pre-releases based on semver pre-release tags
+
+# Optional: enable when you want a combined macOS universal binary (requires darwin/amd64 and darwin/arm64 builds)
+# universal_binaries:
+#   - id: macos-universal
+#     builds:
+#       - teamwerx
+#     name_template: "{{ .ProjectName }}_{{ .Version }}_darwin_universal"
+#     replace: false

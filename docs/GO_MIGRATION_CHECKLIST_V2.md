@@ -72,10 +72,10 @@ This checklist provides an actionable roadmap for migrating `teamwerx` from Java
 
 ### Phase 5: Testing, Documentation & Release (Weeks 11-12)
 
--   [ ] **Integration Tests:** Write end-to-end tests that execute the compiled binary and verify entire user workflows (e.g., `propose` -> `archive` with a merge conflict).
--   [ ] **Data Migration:** Write and test a script or command to ensure any existing `.teamwerx` data is compatible.
+-   [ ] **Integration Tests:** Write end-to-end tests that execute the compiled binary and verify entire user workflows (e.g., `propose` -> `archive` with a merge conflict). (started: basic CLI E2E test added)
+-   [ ] **Data Migration:** Write and test a script or command to ensure any existing `.teamwerx` data is compatible. (started: migrate check command `teamwerx migrate check`)
 -   [ ] **Documentation:**
     -   [ ] Update `README.md` with new installation and usage instructions for the Go binary.
     -   [ ] Update all other developer and user documentation.
--   [ ] **Release Automation:** Configure `goreleaser` to build and release binaries for multiple platforms (macOS, Linux, Windows) and create GitHub releases.
+-   [ ] **Release Automation:** Configure `goreleaser` to build and release binaries for multiple platforms (macOS, Linux, Windows) and create GitHub releases. (started: initial `.goreleaser.yaml` added; releases set to draft)
 -   [ ] **Beta Testing:** Perform manual beta testing of the compiled binaries on all target platforms.
