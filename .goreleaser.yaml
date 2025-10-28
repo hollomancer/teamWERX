@@ -64,8 +64,8 @@ changelog:
       - "^refactor:"
 
 release:
-  draft: true       # set to false once you're ready to auto-publish
-  prerelease: auto  # mark pre-releases based on semver pre-release tags
+  draft: false # set to false once you're ready to auto-publish
+  prerelease: auto # mark pre-releases based on semver pre-release tags
 
 # Optional: enable when you want a combined macOS universal binary (requires darwin/amd64 and darwin/arm64 builds)
 # universal_binaries:
