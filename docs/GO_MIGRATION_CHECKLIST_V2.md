@@ -51,12 +51,12 @@ This checklist provides an actionable roadmap for migrating `teamwerx` from Java
 
 ### Phase 3: Core Logic & Utilities (Weeks 5-7)
 
--   [ ] **Utility Implementation:** Port the JavaScript utilities to Go, ensuring they use the new custom error package.
+-   [ ] **Utility Implementation:** Port the JavaScript utilities to Go, ensuring they use the new custom error package. (started: file, git)
     -   `internal/utils/file`
     -   `internal/utils/git`
     -   `internal/utils/prompt`
--   [ ] **PlanManager Implementation:** Implement the `PlanManager` interface. It should operate on the `Plan` struct within the central `Project` model.
--   [ ] **ChangeManager Implementation:** Implement the `ChangeManager` interface.
+-   [x] **PlanManager Implementation:** Implement the `PlanManager` interface. It should operate on the `Plan` struct within the central `Project` model.
+-   [x] **ChangeManager Implementation:** Implement the `ChangeManager` interface.
 -   [ ] **Remaining Managers:** Implement all other core manager interfaces.
 -   [ ] **Dependency Injection:** Ensure managers are instantiated correctly, receiving their dependencies (other managers) via the defined interfaces.
 
