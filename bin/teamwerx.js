@@ -55,6 +55,9 @@ const summarizeCommand = require("../lib/commands/summarize");
 // Changes (proposals) command module (full-featured apply/archive workflow)
 const changesCommand = require("../lib/commands/changes");
 
+// Specs command module
+const specsCommand = require("../lib/commands/specs");
+
 // Configure CLI
 program
   .name("teamwerx")
@@ -243,12 +246,13 @@ program
   .description("Create a change proposal scaffold")
   .option("--goal <goal>", "Specify the goal slug")
   .option("--author <author>", "Author name/email")
+  .option("--specs <domains>", "Comma-separated list of spec domains to track")
   .action((title, opts) => changesCommand.propose(title, opts));
 
 // Register 'changes' as a command group so subcommands parse their own options correctly
 const changesGroup = program
   .command("changes")
-  .description("Change management commands (list, show, apply, archive)");
+  .description("Change management commands (list, show, apply, archive, sync)");
 
 changesGroup
   .command("list")
@@ -273,8 +277,44 @@ changesGroup
   .description("Archive change into .teamwerx/archive/changes/")
   .option("--goal <goal>", "Goal to notify (optional)")
   .option("--notify", "Notify the goal discussion log")
+  .option("--merge-specs", "Merge spec deltas into project specs")
+  .option("--force", "Force merge even if specs have diverged")
+  .option("--dry-run", "Preview merge without applying")
   .option("--yes", "Skip confirmation prompts")
   .action((id, opts) => changesCommand.archive(id, opts));
+
+changesGroup
+  .command("sync <change-id>")
+  .description("Check spec fingerprints for divergence")
+  .option("--update", "Update fingerprints to current values")
+  .action((id, opts) => changesCommand.sync(id, opts));
+
+// Register 'specs' as a command group for specification management
+const specsGroup = program
+  .command("specs")
+  .description("Specification management commands (init, create, list, show)");
+
+specsGroup
+  .command("init")
+  .description("Initialize .teamwerx/specs directory")
+  .action(() => specsCommand.initSpecs());
+
+specsGroup
+  .command("create <domain>")
+  .description("Create a new spec domain")
+  .option("--title <title>", "Custom title for the spec")
+  .action((domain, opts) => specsCommand.createSpec(domain, opts));
+
+specsGroup
+  .command("list")
+  .description("List all spec domains")
+  .option("--verbose", "Show detailed information")
+  .action((opts) => specsCommand.listSpecs(opts));
+
+specsGroup
+  .command("show <domain>")
+  .description("Show details of a specific spec")
+  .action((domain) => specsCommand.showSpec(domain));
 
 // Error handling
 program.exitOverride();
