@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write   # required to create GitHub releases
+  contents: write # required to create GitHub releases
   packages: write
-  id-token: write   # optional, for provenance if enabled in GoReleaser
+  id-token: write # optional, for provenance if enabled in GoReleaser
 
 concurrency:
   group: release-${{ github.ref }}
@@ -23,7 +23,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # required for GoReleaser to compute changelog and use tags
+          fetch-depth: 0 # required for GoReleaser to compute changelog and use tags
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -34,11 +34,10 @@ jobs:
       - name: Run unit tests
         run: make test
 
-      - name: Install golangci-lint
-        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-
-      - name: Run linter
-        run: make lint
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.54.2
 
       - name: Release with GoReleaser
         uses: goreleaser/goreleaser-action@v6

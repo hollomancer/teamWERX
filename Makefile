@@ -9,7 +9,7 @@ test:
 	go test -v ./...
 
 lint:
-	# Assuming golangci-lint is installed (go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest)
+	# CI runs golangci-lint via GitHub Action; locally, ensure golangci-lint is installed (e.g., v1.54.2)
 	golangci-lint run
 
 clean:
