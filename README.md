@@ -1,5 +1,5 @@
 # teamWERX
-[![Release (goreleaser)](https://github.com/teamwerx/teamwerx/actions/workflows/release.yml/badge.svg)](https://github.com/teamwerx/teamwerx/actions/workflows/release.yml)
+[![Release (goreleaser)](https://github.com/hollomancer/teamwerx/actions/workflows/release.yml/badge.svg)](https://github.com/hollomancer/teamwerx/actions/workflows/release.yml)
 See also: [Contributing (Go)](CONTRIBUTING-GO.md)
 
 ## Go CLI Installation
