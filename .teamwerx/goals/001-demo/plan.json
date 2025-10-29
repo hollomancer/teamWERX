@@ -1,0 +1,16 @@
+{
+  "goal_id": "001-demo",
+  "tasks": [
+    {
+      "id": "T01",
+      "title": "Set up CI for Go",
+      "status": "completed"
+    },
+    {
+      "id": "T02",
+      "title": "Wire DI",
+      "status": "pending"
+    }
+  ],
+  "updated_at": "2025-10-28T15:36:12.015064-04:00"
+}

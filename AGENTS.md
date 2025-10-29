@@ -13,85 +13,63 @@ AI agents: Use teamWERX commands to coordinate goal-based development with the d
 All goals have a numbered workspace under `.teamwerx/goals/<number>-<slug>/` containing:
 
 - `discuss.md` - Discussion log with numbered entries (D01, D02, ...) and reflections (R01, R02, ...)
-- `plan.md` - Task plan with numbered tasks (T01, T02, ...)
+- `plan.json` - Task plan with numbered tasks (T01, T02, ...)
 - `research.md` - Research report with tech stack, business context, and project insights
 - `implementation/` - Implementation records (T01.md, T02.md, ...)
-- `summary.md` - Knowledge summary (optional, created with `teamwerx summarize`)
+- `summary.md` - Knowledge summary (optional; maintained manually)
 
-## Commands
+## Commands (Go CLI)
 
-### `teamwerx goal [description]`
+Use the Go CLI commands below. Workspace flags (optional; defaults shown):
+- `--specs-dir` `.teamwerx/specs`
+- `--goals-dir` `.teamwerx/goals`
+- `--changes-dir` `.teamwerx/changes`
 
-Create a new goal with automatic workspace setup. Prompts for success criteria. Saves goal file to `.teamwerx/goals/[kebab-case-title].md` and creates numbered workspace `.teamwerx/goals/00X-[slug]/` with discussion, plan, and research templates.
+Tip: set `TEAMWERX_CI=1` to disable prompts in automation.
 
-### `teamwerx research [goal-name] [--goal <goal>]`
+### `teamwerx spec list`
+List available spec domains.
 
-Analyze the codebase and generate/update research report. Detects technology stack, languages, and directory structure. Updates `research.md` in goal workspace.
+### `teamwerx spec show <domain>`
+Show details for a spec domain.
 
-### `teamwerx discuss <message> [--goal <goal>] [--proposal]`
+### `teamwerx plan add --goal <goal-id> "<task>"`
+Append a task to `.teamwerx/goals/<goal-id>/plan.json`. Creates the file if missing.
 
-Append a numbered discussion entry (D01, D02, ...) with timestamp and content to the goal's discussion log. Use `--proposal` flag to mark as a change proposal. Non-destructive; preserves all prior entries.
+### `teamwerx plan list --goal <goal-id>`
+List tasks for a goal’s plan.
 
-### `teamwerx reflect [--goal <goal>] [--notes <text>]`
+### `teamwerx plan complete --goal <goal-id> --task <Txx>`
+Mark a task as completed in the plan.
 
-Add a reflection entry (R01, R02, ...) to capture learning and adaptations during execution. Records what worked, what didn't, and adjustments made.
+### `teamwerx plan show --goal <goal-id>`
+Show a goal’s plan details.
 
-### `teamwerx dry-run [--goal <goal>] [--notes <text>]`
+### `teamwerx discuss add --goal <goal-id> "<message>"`
+Append a discussion entry to `.teamwerx/goals/<goal-id>/discuss.md`.
 
-Record a dry-run assessment in the discussion log, outlining expected file changes, risks, and dependencies.
+### `teamwerx discuss list --goal <goal-id>`
+List discussion entries for a goal.
 
-### `teamwerx plan [considerations] [--goal <goal>] [--task <task>] [--interactive]`
+### `teamwerx change list`
+List changes found under `.teamwerx/changes`.
 
-Add numbered tasks (T01, T02, ...) to the goal plan. Use `--task` flag for individual tasks, `--interactive` for prompted entry, or no flags for AI-driven planning mode.
+### `teamwerx change apply --id <change-id>`
+Apply a change by ID (may detect spec divergence).
 
-### `teamwerx execute [goal-name]`
+### `teamwerx change resolve --id <change-id>`
+Interactively resolve divergence, then re-apply.
 
-Execute tasks from the plan:
+### `teamwerx change archive --id <change-id>`
+Archive a change folder after it’s applied.
 
-1. Read plan, identify next pending task
-2. Implement task (create/modify code files)
-3. Update task status to completed in plan file
-4. Prompt developer to commit
+### `teamwerx migrate check`
+Validate an existing `.teamwerx` workspace for compatibility.
 
-### `teamwerx complete [issue-or-title] [--goal <goal>] [--source <fix|manual|batch>]`
+### `teamwerx completion [bash|zsh|fish|powershell]`
+Generate shell completion scripts.
 
-Complete tasks and record implementations. Three modes:
-
-- `--source fix` - Record an issue correction (discussion + task + implementation)
-- `--source manual` - Collect staged git changes into task and implementation
-- `--source batch` (default) - Batch-complete up to 5 pending tasks with `--limit` option
-
-### `teamwerx summarize [--goal <goal>]`
-
-Generate or update knowledge summary for the goal. Distills key decisions, reusable patterns, and gotchas from discussions and implementations into `summary.md`.
-
-### `teamwerx charter`
-
-Generate/refresh `.teamwerx/goals/charter.md` based on detected technology stack and governance constraints.
-
-### `teamwerx inspire [--goal <goal>]`
-
-Analyze pending work and add a discussion entry highlighting decision points or follow-up questions.
-
-### `teamwerx list [--status <status>]`
-
-List all goals. Filter by status if specified. Display title, status, created date.
-
-### `teamwerx status [goal-name] [--context] [--summary]`
-
-Show detailed status of goal (or all goals if omitted).
-
-- Default: Goal status, success criteria, plan info
-- `--context`: Tech stack, directories, artifacts
-- `--summary`: Discussion/implementation counts, recent records
-
-### `teamwerx use <goal-name>`
-
-Set current working goal context. Store in `.teamwerx/.current-goal`.
-
-### `teamwerx archive [goal-name] [--yes]`
-
-Archive a completed goal. Moves goal file, workspace, and artifacts to `.teamwerx/archive/`. Use `--yes` to skip confirmation.
+Note: Legacy Node-era commands (`goal`, `use`, `research`, `execute`, `complete`, `reflect`, `summarize`, `charter`, `archive`) are not implemented in the Go CLI. Manage these artifacts manually as needed. See `README.md` and `MIGRATION.md` for details.
 
 ## Conventions
 
