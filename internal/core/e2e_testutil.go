@@ -6,7 +6,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 	"time"
 )
@@ -132,9 +131,4 @@ func writeFile(t *testing.T, path string, data []byte) {
 	if err := os.WriteFile(path, data, 0o644); err != nil {
 		t.Fatalf("WriteFile(%s) failed: %v", path, err)
 	}
-}
-
-// trimAllSpaces is a small helper for robust output assertions (optional).
-func trimAllSpaces(s string) string {
-	return strings.TrimSpace(s)
 }

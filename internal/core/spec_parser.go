@@ -35,7 +35,7 @@ func (p *SpecParser) Parse(content []byte) (*model.Spec, error) {
 	var requirements []model.Requirement
 	var currentReq *model.Requirement
 
-	ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+	_ = ast.Walk(node, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if entering {
 			if h, ok := n.(*ast.Heading); ok && h.Level <= 3 {
 				// Finish previous requirement if we encounter a new heading

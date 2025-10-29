@@ -2,62 +2,71 @@
 
 [![Release (goreleaser)](https://github.com/hollomancer/teamwerx/actions/workflows/release.yml/badge.svg)](https://github.com/hollomancer/teamwerx/actions/workflows/release.yml)
 
-> A lightweight CLI for managing development goals, specifications, and AI-assisted workflows.
+> A lightweight CLI for organizing development work with AI coding assistants.
 
 ## What is teamWERX?
 
-teamWERX helps you organize development work into clear, traceable goals with the help of AI coding assistants. It's designed for individual developers who:
+teamWERX helps you work effectively with AI coding assistants by providing a structured workflow for goals, research, planning, and decision tracking.
 
-- Want to keep their work organized across multiple features or goals
-- Work with AI coding assistants (Claude, ChatGPT, Copilot, etc.)
-- Need to track decisions, specifications, and task progress
-- Value simplicity and git-based version control
+**Key principle**: Everything is a file. Your charter, research, plans, discussions, and specifications live in `.teamwerx/` and version with your code.
 
-**Key principle**: Everything is a file. Your goals, plans, discussions, and specifications live in `.teamwerx/` and version with your code in git.
+## The Workflow
 
-## How it works
+teamWERX follows a clear progression with research/discuss/decide at each level:
 
-1. **Create your charter** — Define your project's purpose, tech stack, and conventions in `.teamwerx/charter.md`
-2. **Organize by goals** — Create numbered workspaces (`.teamwerx/goals/001-demo/`) for each feature or project
-3. **Plan your work** — Break down goals into tasks stored in `plan.json`
-4. **Capture decisions** — Log discussions and context in `discuss.md` 
-5. **Track specs** — Manage specifications as Markdown files with version control
-6. **Work with AI** — AI agents read the charter and `AGENTS.md` to understand your workflow and help execute tasks
+```
+CHARTER → GOAL → PLAN → TASKS → SPEC
+   ↓        ↓       ↓       ↓       ↓
+ R/D/D    R/D/D   R/D/D   E/D/D   Create
 
-All artifacts are plain text files that live alongside your code, making them easy to read, diff, and version control.
-
-## Quick Example
-
-Here's a typical workflow for adding a new feature:
-
-```bash
-# 1. Add tasks to your goal's plan
-teamwerx plan add --goal 001-auth "Implement login endpoint"
-teamwerx plan add --goal 001-auth "Add password hashing"
-teamwerx plan add --goal 001-auth "Write authentication tests"
-
-# 2. See what's on your plate
-teamwerx plan list --goal 001-auth
-# Output:
-# - T01 [pending] Implement login endpoint
-# - T02 [pending] Add password hashing
-# - T03 [pending] Write authentication tests
-
-# 3. Capture a design decision
-teamwerx discuss add --goal 001-auth "Using bcrypt for password hashing"
-
-# 4. Mark tasks complete as you finish them
-teamwerx plan complete --goal 001-auth --task T01
-
-# 5. Review your discussion log
-teamwerx discuss list --goal 001-auth
+R/D/D = Research/Discuss/Decide
+E/D/D = Execute/Discuss/Decide
 ```
 
-Everything you create is stored in `.teamwerx/goals/001-auth/`:
-- `plan.json` — Your task list with completion status
-- `discuss.md` — Your decision log and notes
-- `research.md` — Background research (you create manually)
-- `implementation/` — Implementation notes (optional)
+### 1. CHARTER (Project Level)
+
+Define your project once:
+- Purpose and vision
+- Technology stack
+- Coding conventions
+- AI-specific instructions
+
+**You do this once.** Your AI reads it before every session.
+
+### 2. GOAL (Feature Level)
+
+For each feature or initiative:
+- **Research**: AI investigates options, reviews existing code
+- **Discuss**: AI presents findings, you review together
+- **Decide**: You approve the approach
+
+Creates: `research.md` with options analysis and recommendation
+
+### 3. PLAN (Task Breakdown Level)
+
+Break the goal into tasks:
+- **Research**: Determine logical task sequence
+- **Discuss**: Review task breakdown
+- **Decide**: Approve the plan
+
+Creates: `plan.json` with task list
+
+### 4. TASKS (Execution Level)
+
+For each task:
+- **Execute**: AI implements code
+- **Discuss**: AI logs decisions continuously
+- **Decide**: Mark task complete
+
+Updates: `discuss.md` with implementation narrative
+
+### 5. SPEC (Formalization Level)
+
+After goal completion:
+- **Create**: Formalize what was built into specifications
+- Document API contracts, decisions, integration points
+
+Updates: `.teamwerx/specs/<domain>/spec.md`
 
 ## Installation
 
@@ -69,13 +78,11 @@ Everything you create is stored in `.teamwerx/goals/001-auth/`:
 
 ### Install with Go
 
-If you have Go 1.18+ installed:
-
 ```bash
 go install github.com/teamwerx/teamwerx/cmd/teamwerx@latest
 ```
 
-The binary will be installed to `$GOPATH/bin` (usually `~/go/bin`).
+Binary installs to `$GOPATH/bin` (usually `~/go/bin`).
 
 ### Build from source
 
@@ -83,412 +90,463 @@ The binary will be installed to `$GOPATH/bin` (usually `~/go/bin`).
 git clone https://github.com/hollomancer/teamwerx.git
 cd teamwerx
 make build
-# Binary is created as ./teamwerx
 ```
 
-## Getting Started
+## Quick Start
 
-### 1. Initialize your project charter
-
-The charter is your project's steering document - it defines purpose, tech stack, and conventions for AI agents and team members:
+### 1. Initialize your charter
 
 ```bash
 teamwerx charter init
 ```
 
-This creates `.teamwerx/charter.md` with a template you can customize. Edit it to include:
-- Project purpose and vision
-- Technology stack
-- Coding conventions and standards
-- AI agent instructions specific to your project
+Edit `.teamwerx/charter.md` with your project details:
 
-View your charter anytime:
+```yaml
+---
+title: Project Charter
+version: 1.0.0
+purpose: E-commerce platform for artisan goods
+tech_stack:
+  - Go 1.21
+  - PostgreSQL 15
+  - React + TypeScript
+conventions:
+  commit_prefix: '[PROJECT]'
+  branch_naming: feature/*, bugfix/*
+---
 
-```bash
-teamwerx charter show
+# Project Charter
+
+## Purpose
+Build a marketplace connecting artisan creators with customers.
+
+## Tech Stack
+- Backend: Go with standard library preference
+- Database: PostgreSQL
+- Frontend: React + TypeScript
+
+## Conventions
+- Commits: `[PROJECT] <description>`
+- Tests required for all endpoints
+
+## AI Agent Instructions
+- Prefer standard library over dependencies
+- Security is paramount
+- Write tests before marking tasks complete
 ```
 
-### 2. Set up your first goal workspace
-
-Create a directory for your goal:
+### 2. Create your first goal workspace
 
 ```bash
-mkdir -p .teamwerx/goals/001-my-feature
+mkdir -p .teamwerx/goals/001-user-auth
 ```
 
-### 3. Start planning
+### 3. Start working with AI
 
-Add tasks to your plan:
+Give your AI this prompt:
+
+> "I want to implement user authentication as goal 001-user-auth. Please:
+> 1. Read the charter
+> 2. Research the approach and create research.md
+> 3. Present your findings and wait for approval
+> 4. Create a task plan
+> 5. Execute tasks, logging decisions continuously
+> 6. Help update specs after completion"
+
+The AI follows the teamWERX workflow automatically (it reads `AGENTS.md`).
+
+## Working with AI: The Complete Flow
+
+### CHARTER Level
+
+**You (once per project):**
 
 ```bash
-teamwerx plan add --goal 001-my-feature "Research existing solutions"
-teamwerx plan add --goal 001-my-feature "Design the API"
-teamwerx plan add --goal 001-my-feature "Implement core logic"
+teamwerx charter init
+# Edit .teamwerx/charter.md with your project details
 ```
 
-View your plan:
+### GOAL Level
+
+**Prompt your AI:**
+
+> "I want to add user authentication. Please research the approach for this project and create research.md at `.teamwerx/goals/001-user-auth/research.md`."
+
+**AI researches and creates research.md:**
+```markdown
+# Research: User Authentication
+
+## Requirements
+- Email/password registration and login
+- JWT tokens for sessions
+- Password security
+
+## Existing Code Review
+- Found DB connection in db/postgres.go
+- Found migration system
+- No existing auth code
+
+## Technical Options
+1. **bcrypt** for hashing (industry standard, adjustable cost)
+2. argon2 (more modern, complex config)
+
+1. **golang-jwt/jwt v5** (popular, good ergonomics)
+2. Standard library (more boilerplate)
+
+## Recommended Approach
+- bcrypt with cost 12 (OWASP standard)
+- golang-jwt/jwt v5 for tokens
+- Follow existing middleware pattern
+
+## Open Questions
+- Password complexity requirements?
+- Token expiration time?
+```
+
+**AI discusses:**
+```bash
+teamwerx discuss add --goal 001-user-auth "Research complete. Recommending bcrypt + JWT. See research.md for details."
+```
+
+**AI presents to you:**
+
+> "I've researched user authentication. Recommending bcrypt for password hashing and golang-jwt/jwt for tokens. See `.teamwerx/goals/001-user-auth/research.md` for full analysis. I have questions about password requirements and token expiration. Approve?"
+
+**You review and decide:**
 
 ```bash
-teamwerx plan show --goal 001-my-feature
+cat .teamwerx/goals/001-user-auth/research.md
 ```
 
-### 4. Capture decisions as you work
+> "Approved. Use bcrypt cost 12, JWT 24h expiration, min 8 chars for passwords. Log this and create the plan."
+
+### PLAN Level
+
+**AI researches task breakdown, discusses, and creates plan:**
 
 ```bash
-teamwerx discuss add --goal 001-my-feature "Decided to use REST instead of GraphQL for simplicity"
+teamwerx discuss add --goal 001-user-auth "Approved approach. Breaking into 7 tasks: model, hashing, register, login, JWT, middleware, tests."
+
+teamwerx plan add --goal 001-user-auth "Create User model and migration"
+teamwerx plan add --goal 001-user-auth "Implement password hashing utilities"
+teamwerx plan add --goal 001-user-auth "Add POST /auth/register endpoint"
+teamwerx plan add --goal 001-user-auth "Add POST /auth/login endpoint"
+teamwerx plan add --goal 001-user-auth "Implement JWT token generation"
+teamwerx plan add --goal 001-user-auth "Add authentication middleware"
+teamwerx plan add --goal 001-user-auth "Write integration tests"
 ```
 
-### 5. Track progress
+**AI shows plan:**
 
-Complete tasks as you finish them:
+> "Created 7 tasks for user authentication. Review with `teamwerx plan show --goal 001-user-auth`. Proceed?"
+
+**You approve:**
+
+> "Yes, proceed with implementation."
+
+### TASK Level
+
+**AI executes each task with continuous discussion:**
 
 ```bash
-teamwerx plan complete --goal 001-my-feature --task T01
+# Task 1
+teamwerx discuss add --goal 001-user-auth "Starting T01: User model with email, password_hash, timestamps"
+# AI implements User struct, migration file, runs migration
+teamwerx discuss add --goal 001-user-auth "Using CITEXT for email field - ensures case-insensitive uniqueness"
+teamwerx plan complete --goal 001-user-auth --task T01
+teamwerx discuss add --goal 001-user-auth "Completed T01: User model with migration, email constraint added"
+
+# Task 2
+teamwerx discuss add --goal 001-user-auth "Starting T02: Password hashing utilities"
+# AI implements HashPassword() and CheckPassword()
+teamwerx discuss add --goal 001-user-auth "Created HashPassword/CheckPassword in utils/auth with bcrypt cost 12"
+teamwerx discuss add --goal 001-user-auth "Added unit tests covering edge cases - empty passwords, cost verification"
+teamwerx plan complete --goal 001-user-auth --task T02
+teamwerx discuss add --goal 001-user-auth "Completed T02: Password utilities with full test coverage"
+
+# Continue for remaining tasks...
 ```
 
-Check what's done:
+**You review progress anytime:**
 
 ```bash
-teamwerx plan list --goal 001-my-feature
+teamwerx plan show --goal 001-user-auth
+teamwerx discuss list --goal 001-user-auth
 ```
 
-## Common Workflows
+### SPEC Level
 
-### Planning a new feature
+**After goal completion, AI updates specs:**
+
+> "All tasks complete for 001-user-auth. Should I update the authentication spec?"
+
+**AI updates `.teamwerx/specs/authentication/spec.md`:**
+```markdown
+# Authentication Specification
+
+## Endpoints
+
+### POST /auth/register
+- Request: `{"email": "string", "password": "string"}`
+- Response: `{"user_id": "uuid", "token": "jwt"}`
+- Password requirements: min 8 chars
+- Password storage: bcrypt cost 12
+
+### POST /auth/login
+- Request: `{"email": "string", "password": "string"}`
+- Response: `{"user_id": "uuid", "token": "jwt"}`
+- Case-insensitive email matching
+
+## JWT Tokens
+- Expiration: 24 hours
+- Algorithm: HS256
+- Claims: user_id, email, exp
+
+## Middleware
+- Bearer token authentication
+- Available at: middleware/auth.go
+```
+
+**You commit everything:**
 
 ```bash
-# Create workspace directory
-mkdir -p .teamwerx/goals/002-user-profiles
-
-# Add implementation tasks
-teamwerx plan add --goal 002-user-profiles "Create user profile model"
-teamwerx plan add --goal 002-user-profiles "Add profile endpoints"
-teamwerx plan add --goal 002-user-profiles "Build profile UI"
-
-# Document your approach
-teamwerx discuss add --goal 002-user-profiles "Profiles will use separate table for extensibility"
+git add .teamwerx/ src/
+git commit -m "[teamWERX] Complete user authentication (001-user-auth)"
 ```
 
-### Working on multiple goals
+## Recommended AI Prompts
 
-You can work on several goals concurrently. Each has its own workspace:
+### Starting a goal
+
+```
+I want to implement [FEATURE] as goal [ID]-[NAME].
+Please:
+1. Read the charter
+2. Research the approach and create research.md
+3. Present findings and wait for approval
+4. Create the task plan
+5. Execute tasks with continuous discussion logging
+6. Update relevant specs when complete
+```
+
+### Checking progress
+
+```
+What's the status of goal [ID]? Show completed tasks, remaining work, and any blockers.
+```
+
+### Reviewing decisions
+
+```
+Show me all the decisions we made for goal [ID].
+```
+
+### Resuming work
+
+```
+Let's continue goal [ID]. Catch me up on what's done and what's next.
+```
+
+### Investigating options
+
+```
+Before implementing [FEATURE], research the options and document your findings in research.md. Include pros/cons and a recommendation.
+```
+
+### Getting summary
+
+```
+Goal [ID] is complete. Please help create a summary.md documenting what we built, key decisions, and lessons learned.
+```
+
+## Best Practices
+
+### 1. Charter first, always
+
+Initialize and customize your charter before any goals. It guides all AI behavior.
+
+### 2. Enforce the workflow
+
+Don't let AI skip steps:
+- **Goal level**: Require research.md before approving
+- **Plan level**: Review task breakdown before execution
+- **Task level**: Require continuous discussion logging
+- **Spec level**: Formalize what was built
+
+### 3. Review research before approving
+
+Always read the research.md AI creates. Ask questions, suggest alternatives, challenge assumptions.
+
+### 4. Use descriptive names
+
+- ✅ `001-user-authentication`
+- ✅ `002-stripe-payments`
+- ❌ `001-feature`
+
+### 5. Keep tasks granular
+
+Good:
+- ✅ "Create User model and migration"
+- ✅ "Add login endpoint"
+
+Bad:
+- ❌ "Implement authentication system"
+
+### 6. Commit `.teamwerx/` with code
 
 ```bash
-# Check progress on feature A
-teamwerx plan show --goal 001-auth
-
-# Add task to feature B
-teamwerx plan add --goal 002-profiles "Add avatar upload"
-
-# Switch context by changing goal ID in commands
-teamwerx discuss list --goal 001-auth
-teamwerx discuss list --goal 002-profiles
+git add .teamwerx/ src/
+git commit -m "[teamWERX] Complete feature (goal ID)"
 ```
 
-### Reviewing what's been done
+This creates an audit trail.
 
-```bash
-# See all tasks and their status
-teamwerx plan show --goal 001-auth
+### 7. Update specs after completion
 
-# Review decision log
-teamwerx discuss list --goal 001-auth
-
-# Check discussion details
-cat .teamwerx/goals/001-auth/discuss.md
-```
-
-### Managing specifications
-
-teamWERX can track project specifications as Markdown files:
-
-```bash
-# List all specs
-teamwerx spec list
-
-# View a specific spec's requirements
-teamwerx spec show authentication
-
-# Specs are stored at .teamwerx/specs/<domain>/spec.md
-# You edit them manually or via change proposals (see Advanced Usage)
-```
-
-### Using with AI assistants
-
-teamWERX is designed to work seamlessly with AI coding assistants. The `AGENTS.md` file in your project root tells AI agents how to use teamWERX commands.
-
-When working with an AI:
-
-1. **Give context**: "Check the plan for goal 001-auth"
-2. **Ask for updates**: "Add a task to implement rate limiting"  
-3. **Capture decisions**: "Log our discussion about using JWT tokens"
-
-The AI can run teamWERX commands to update plans and discussions as you work together.
+Don't skip the spec formalization step. It documents what was actually built.
 
 ## Command Reference
 
 ### Charter
 
-Create and view your project's steering document.
-
 ```bash
-# Initialize charter (first time only)
-teamwerx charter init
-
-# Display charter
-teamwerx charter show
+teamwerx charter init    # Initialize charter
+teamwerx charter show    # View charter
 ```
 
-The charter lives at `.teamwerx/charter.md` and contains:
-- **Purpose** — Project vision and goals
-- **Tech Stack** — Languages, frameworks, databases
-- **Conventions** — Commit formats, branch naming, code standards
-- **Governance** — Decision-making processes
-- **AI Instructions** — Specific guidance for AI coding assistants
-
-This is the first thing you should create when starting a project with teamWERX.
-
-### Plans
-
-Manage task lists for your goals.
+### Discussion
 
 ```bash
-# Add a task
-teamwerx plan add --goal <goal-id> "Task description"
-
-# List all tasks
-teamwerx plan list --goal <goal-id>
-
-# Mark task complete
-teamwerx plan complete --goal <goal-id> --task T01
-
-# Show plan summary
-teamwerx plan show --goal <goal-id>
+teamwerx discuss add --goal <id> "Message"    # Log decision/discovery
+teamwerx discuss list --goal <id>             # List all entries
 ```
 
-### Discussions
-
-Capture decisions, notes, and context.
+### Plan
 
 ```bash
-# Add discussion entry
-teamwerx discuss add --goal <goal-id> "Your note or decision"
-
-# List all entries
-teamwerx discuss list --goal <goal-id>
+teamwerx plan add --goal <id> "Task"          # Add task
+teamwerx plan list --goal <id>                # List tasks
+teamwerx plan show --goal <id>                # Show summary
+teamwerx plan complete --goal <id> --task TX  # Mark complete
 ```
 
-Discussion entries are stored as YAML blocks in `discuss.md` with timestamps and sequential IDs (D01, D02, etc.).
-
-### Specs
-
-Work with project specifications.
+### Spec
 
 ```bash
-# List all spec domains
-teamwerx spec list
-
-# Show requirements for a domain
-teamwerx spec show <domain-name>
+teamwerx spec list              # List spec domains
+teamwerx spec show <domain>     # Show spec
 ```
-
-Specs are Markdown files at `.teamwerx/specs/<domain>/spec.md` that you can edit directly.
 
 ### Changes (Advanced)
 
-Manage spec change proposals with conflict detection.
-
 ```bash
-# List pending changes
-teamwerx change list
-
-# Apply a change (merges into spec)
-teamwerx change apply --id <change-id>
-
-# Resolve conflicts interactively
-teamwerx change resolve --id <change-id>
-
-# Archive applied change
-teamwerx change archive --id <change-id>
-```
-
-Changes are JSON files at `.teamwerx/changes/<id>/change.json` that describe additions, modifications, or removals to spec requirements.
-
-### Utilities
-
-```bash
-# Generate shell completions
-teamwerx completion bash
-teamwerx completion zsh
-teamwerx completion fish
-teamwerx completion powershell
+teamwerx change list                # List changes
+teamwerx change apply --id <id>     # Apply change
+teamwerx change resolve --id <id>   # Resolve conflicts
+teamwerx change archive --id <id>   # Archive change
 ```
 
 ## Workspace Structure
 
-Your `.teamwerx/` directory contains all project artifacts:
-
 ```
 .teamwerx/
-├── charter.md                  # Project steering document
+├── charter.md                    # Project steering document
 ├── goals/
-│   └── 001-my-feature/
-│       ├── plan.json           # Task list
-│       ├── discuss.md          # Decision log
-│       ├── research.md         # Research notes (manual)
-│       └── implementation/     # Implementation notes (optional)
-├── specs/
-│   └── authentication/
-│       └── spec.md            # Specification
-└── changes/
-    ├── CH-001/
-    │   └── change.json        # Change proposal
-    └── .archive/              # Archived changes
+│   ├── 001-user-auth/
+│   │   ├── research.md           # Goal-level research
+│   │   ├── plan.json             # Task list (CLI-managed)
+│   │   ├── discuss.md            # Decisions (CLI-managed)
+│   │   └── summary.md            # Post-completion summary
+│   └── 002-payments/
+│       └── ...
+└── specs/
+    ├── authentication/
+    │   └── spec.md               # Formalized spec
+    └── payments/
+        └── spec.md
 ```
 
-### Files you create manually
+### File ownership
 
-- **charter.md** — Project steering document (created with `teamwerx charter init`, then edited)
-- **research.md** — Background research and context for the goal
-- **summary.md** — Knowledge summary (what worked, gotchas, patterns)
-- **implementation/** — Any implementation notes or artifacts you want to track
+**You create/edit:**
+- `charter.md` (initialize, then customize)
+- `research.md` (AI creates, you can edit)
+- `summary.md` (you or AI can create)
+- Specs (`.teamwerx/specs/<domain>/spec.md`)
 
-### Files teamWERX manages
+**CLI manages (never edit directly):**
+- `plan.json` (use `teamwerx plan` commands)
+- `discuss.md` (use `teamwerx discuss` commands)
 
-- **plan.json** — Task list with IDs and completion status
-- **discuss.md** — Discussion log with numbered entries
+## File Formats
 
-## Configuration
-
-Basic configuration is in `AGENTS.md` at your project root:
+### charter.md
 
 ```yaml
 ---
-teamwerx:
-  version: "1.0.0"
-  initialized: "2025-01-15"
+title: Project Charter
+version: 1.0.0
+purpose: Brief project purpose
+tech_stack:
+  - Technology 1
+  - Technology 2
+conventions:
+  commit_prefix: '[PROJECT]'
 ---
+
+# Project Charter
+
+## Purpose
+[Vision and goals]
+
+## Tech Stack
+[Technologies]
+
+## Conventions
+[Standards]
+
+## AI Agent Instructions
+[AI-specific guidance]
 ```
 
-This minimal frontmatter tracks the teamWERX version. The rest of `AGENTS.md` contains instructions for AI agents.
+### research.md
 
-## Advanced Features
+```markdown
+# Research: [Goal Name]
 
-### Non-interactive mode
+## Requirements
+- [What we're building]
 
-Set `TEAMWERX_CI=1` to disable prompts (useful for scripts or CI):
+## Existing Code Review
+- [Relevant patterns, code to reuse]
 
-```bash
-TEAMWERX_CI=1 teamwerx plan add --goal 001-demo "Automated task"
+## Technical Options
+- Option 1: [Approach]
+  - Pros: ...
+  - Cons: ...
+
+## Recommended Approach
+[Recommendation with rationale]
+
+## Open Questions
+- [Uncertainties for human]
 ```
-
-### Custom workspace directories
-
-Override default paths with flags:
-
-```bash
-teamwerx plan list \
-  --goals-dir /path/to/goals \
-  --goal 001-demo
-```
-
-### Change proposals
-
-Changes let you propose modifications to specs with conflict detection:
-
-1. Create a change JSON with spec deltas (additions/modifications/removals)
-2. Apply it: `teamwerx change apply --id CH-001`
-3. If conflicts occur, resolve interactively: `teamwerx change resolve --id CH-001`
-4. Archive when done: `teamwerx change archive --id CH-001`
-
-See [docs/spec-merging.md](docs/spec-merging.md) for details on conflict resolution.
-
-### Working with multiple agents
-
-Different AI agents can work on different goals in parallel:
-
-```bash
-# Agent A working on authentication
-teamwerx plan add --goal 001-auth "Add OAuth support"
-teamwerx discuss add --goal 001-auth "Using Auth0 for social login"
-
-# Agent B working on profiles  
-teamwerx plan add --goal 002-profiles "Add bio field"
-teamwerx discuss add --goal 002-profiles "Bio limited to 500 chars"
-```
-
-Each goal workspace is isolated, so agents don't interfere with each other.
-
-## Best Practices
-
-### Start with the charter
-
-Always run `teamwerx charter init` when starting a new project and customize it before creating goals. The charter:
-- Guides AI agents on how to work with your codebase
-- Documents decisions that apply across all goals
-- Establishes conventions for the entire team
-
-### Goal naming
-
-Use numbered prefixes for consistent ordering:
-- `001-authentication`
-- `002-user-profiles`
-- `003-payment-integration`
-
-### Task granularity
-
-Keep tasks small and actionable:
-- ✅ "Implement login endpoint"
-- ✅ "Add password validation"
-- ❌ "Build entire auth system"
-
-### Discussion entries
-
-Capture the "why" behind decisions:
-- Design choices and trade-offs
-- Important constraints or requirements
-- Problems encountered and solutions
-
-### Git workflow
-
-Commit your `.teamwerx/` directory alongside code changes:
-
-```bash
-git add .teamwerx/goals/001-auth/
-git commit -m "[teamWERX] Complete login endpoint implementation (T01)"
-```
-
-This creates a complete audit trail of both code and planning decisions.
-
-### Research and summaries
-
-Create `research.md` at the start to capture:
-- Technology options considered
-- Existing solutions reviewed
-- Key constraints identified
-
-Create `summary.md` at the end to capture:
-- What worked well
-- What didn't work
-- Reusable patterns
-- Gotchas for next time
-
-## File Formats
 
 ### plan.json
 
 ```json
 {
-  "goal_id": "001-demo",
+  "goal_id": "001-user-auth",
   "tasks": [
     {
       "id": "T01",
-      "title": "Set up CI",
+      "title": "Create User model and migration",
       "status": "completed"
     },
     {
-      "id": "T02", 
-      "title": "Add tests",
+      "id": "T02",
+      "title": "Implement password hashing",
       "status": "pending"
     }
   ],
@@ -496,69 +554,209 @@ Create `summary.md` at the end to capture:
 }
 ```
 
-Task statuses: `pending`, `in-progress`, `completed`
-
 ### discuss.md
 
-```markdown
+```yaml
 ---
 id: D01
 type: discussion
 timestamp: 2025-01-15T10:00:00Z
-content: Decided to use PostgreSQL for better JSON support
+content: Research complete. Recommending bcrypt + JWT approach.
 ---
 
 ---
 id: D02
 type: discussion
-timestamp: 2025-01-15T11:30:00Z
-content: Added index on user_id for query performance
+timestamp: 2025-01-15T10:15:00Z
+content: Starting T01 - User model with email, password_hash, timestamps
+---
+
+---
+id: D03
+type: discussion
+timestamp: 2025-01-15T10:45:00Z
+content: Using CITEXT for email field - ensures case-insensitive uniqueness
 ---
 ```
 
-Each entry is a YAML block with sequential ID (D01, D02, etc.)
+## Common Workflows
+
+### Starting a new feature
+
+```bash
+mkdir -p .teamwerx/goals/002-payments
+```
+
+**Prompt AI:**
+
+> "Implement Stripe payment integration as goal 002-payments. Follow the full workflow: research, plan, execute, update specs."
+
+### Resuming after a break
+
+**Prompt AI:**
+
+> "Catch me up on goal 002-payments. What's done, what's next?"
+
+**AI responds:**
+
+> "For 002-payments: Completed T01-T03 (Stripe setup, payment model, create endpoint). Remaining: T04 (webhook handling), T05 (refund endpoint), T06 (tests). Continue with T04?"
+
+### Investigating before deciding
+
+**Prompt AI:**
+
+> "Before implementing real-time notifications, research WebSockets vs Server-Sent Events vs polling. Create research.md with analysis."
+
+### Working on multiple goals
+
+Switch contexts freely - each goal is independent:
+
+> "Pause 002-payments. Start 003-email-notifications. Research email service options first."
+
+### Reviewing all work for a goal
+
+```bash
+teamwerx plan show --goal 001-user-auth
+teamwerx discuss list --goal 001-user-auth
+cat .teamwerx/goals/001-user-auth/research.md
+cat .teamwerx/goals/001-user-auth/summary.md
+```
+
+## Tips for Working with AI
+
+### Enforce the workflow
+
+**Don't accept:**
+> "I'll implement authentication now"
+
+**Require:**
+> "First create research.md, then discuss your findings with me"
+
+### Be specific
+
+**Vague:**
+> "Add payments"
+
+**Specific:**
+> "Add Stripe payment processing as goal 002-payments. Research the approach, then create a plan."
+
+### Request progress updates
+
+> "After each task, tell me what you did before starting the next one."
+
+### Review before approving
+
+At each level:
+- **Goal**: Review research.md
+- **Plan**: Review task list
+- **Task**: Review discuss.md narrative
+- **Spec**: Review spec updates
+
+### Use AI to document
+
+> "Based on the discussion log, help me create summary.md for this goal."
 
 ## Troubleshooting
 
-### "No plan found for goal"
+### AI skipping research
 
-You need to add at least one task first:
+**Remind it:**
+
+> "Don't skip the research phase. Create research.md first, then discuss findings with me."
+
+### Missing discussion entries
+
+**Correct it:**
+
+> "Please log more decisions as you work. I want to understand your reasoning."
+
+### AI editing files directly
+
+**Stop it:**
+
+> "Don't edit plan.json or discuss.md directly. Use the teamwerx CLI commands."
+
+### Specs not updated
+
+**Remind it:**
+
+> "After completing a goal, update the relevant spec at .teamwerx/specs/<domain>/spec.md."
+
+## Advanced Features
+
+### Non-interactive mode (CI/automation)
 
 ```bash
-teamwerx plan add --goal 001-demo "First task"
+TEAMWERX_CI=1 teamwerx plan add --goal 001-demo "Automated task"
 ```
 
-This creates the `plan.json` file.
-
-### "Change not found"
-
-Make sure the change ID matches the directory name:
+### Custom workspace paths
 
 ```bash
-# Directory: .teamwerx/changes/CH-001/
+teamwerx plan list --goals-dir /custom/path --goal 001-demo
+```
+
+### Spec change proposals
+
+For formal spec management with conflict detection:
+
+```bash
 teamwerx change apply --id CH-001
+teamwerx change resolve --id CH-001  # if conflicts
+teamwerx change archive --id CH-001
 ```
 
-### Validation errors
+See [docs/spec-merging.md](docs/spec-merging.md) for details.
 
-Check the files directly to see what's wrong:
+## Example Prompts Library
 
-```bash
-# Verify plan.json exists and is valid JSON
-cat .teamwerx/goals/001-demo/plan.json | jq .
+### Initial setup
 
-# Check discussion format
-cat .teamwerx/goals/001-demo/discuss.md
+```
+I'm starting a new project. Help me customize the charter at .teamwerx/charter.md. Ask me about project purpose, tech stack, and conventions.
+```
+
+### Starting a goal
+
+```
+Implement [FEATURE] as goal [ID]-[NAME]. Follow the workflow:
+1. Research and create research.md
+2. Discuss findings, wait for approval
+3. Create task plan
+4. Execute tasks with discussion logging
+5. Update specs when complete
+```
+
+### Checking status
+
+```
+Show status of goal [ID]:
+- Completed tasks
+- Remaining tasks
+- Any blockers
+```
+
+### Getting context
+
+```
+I'm returning to goal [ID]. Review the plan and discussion log and catch me up.
+```
+
+### Requesting summary
+
+```
+Create summary.md for goal [ID] covering what we built, key decisions, and lessons learned.
 ```
 
 ## Requirements
 
 - Go 1.18+ (if building from source)
 - Git (for version control)
+- An AI coding assistant that can run shell commands
 
 ## Development
 
-See [CONTRIBUTING-GO.md](CONTRIBUTING-GO.md) for:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - Building and testing
 - Code organization
 - Adding new commands
@@ -571,6 +769,6 @@ MIT
 ## Links
 
 - **Documentation**: [docs/](docs/)
+- **Agent Instructions**: [AGENTS.md](AGENTS.md)
 - **Issue Tracker**: [GitHub Issues](https://github.com/hollomancer/teamwerx/issues)
-- **Contributing**: [CONTRIBUTING-GO.md](CONTRIBUTING-GO.md)
-- **Migration Guide**: [MIGRATION.md](MIGRATION.md)
+- **Contributing**: [CONTRIBUTING.md](CONTRIBUTING.md)

@@ -3,7 +3,6 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"time"
@@ -198,34 +197,4 @@ func (m *changeManager) changeDir(changeID string) string {
 
 func (m *changeManager) changeFile(changeID string) string {
 	return filepath.Join(m.changeDir(changeID), "change.json")
-}
-
-// Optional helper to detect whether a path exists and is a directory.
-func isDir(path string) (bool, error) {
-	info, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false, custom_errors.NewErrNotFound("path", path)
-		}
-		return false, err
-	}
-	return info.IsDir(), nil
-}
-
-// Optional helper to list subdirectories safely, returning empty slice on not found.
-func listDirs(path string) ([]fs.DirEntry, error) {
-	entries, err := os.ReadDir(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return []fs.DirEntry{}, nil
-		}
-		return nil, err
-	}
-	var dirs []fs.DirEntry
-	for _, e := range entries {
-		if e.IsDir() {
-			dirs = append(dirs, e)
-		}
-	}
-	return dirs, nil
 }

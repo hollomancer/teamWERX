@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -56,12 +57,16 @@ func (m *specManager) ReadSpec(domain string) (*model.Spec, error) {
 // If `spec.Content` is present (non-empty), prefer writing it directly as the file's content.
 // Otherwise fall back to the serializer to construct the content.
 func (m *specManager) WriteSpec(spec *model.Spec) error {
+	if spec == nil {
+		return fmt.Errorf("spec cannot be nil")
+	}
+
 	path := filepath.Join(m.baseDir, spec.Domain, "spec.md")
 
 	var content []byte
 	var err error
 
-	if spec != nil && spec.Content != "" {
+	if spec.Content != "" {
 		content = []byte(spec.Content)
 	} else {
 		content, err = m.serializer.Serialize(spec)
