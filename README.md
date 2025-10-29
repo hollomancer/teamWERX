@@ -1,10 +1,7 @@
 # teamWERX
 [![Release (goreleaser)](https://github.com/teamwerx/teamwerx/actions/workflows/release.yml/badge.svg)](https://github.com/teamwerx/teamwerx/actions/workflows/release.yml)
 
-See also: [Migration Guide (Node → Go)](MIGRATION.md) · [Contributing (Go)](CONTRIBUTING-GO.md)
-
-> Legacy Node.js docs have been archived in this repository. See docs/archive/CONTRIBUTING-node.md for the last Node-based contributing guide.
-
+See also: [Contributing (Go)](CONTRIBUTING-GO.md)
 ## Go CLI Installation
 
 
