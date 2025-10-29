@@ -92,3 +92,15 @@ type DeltaOperation struct {
 	Type        string      `json:"type"` // ADDED, MODIFIED, REMOVED
 	Requirement Requirement `json:"requirement"`
 }
+
+// Charter represents the project's steering document - defines purpose, tech stack, and conventions.
+type Charter struct {
+	Title       string                 `yaml:"title"`
+	Version     string                 `yaml:"version"`
+	Created     time.Time              `yaml:"created"`
+	Updated     time.Time              `yaml:"updated"`
+	Purpose     string                 `yaml:"purpose"`
+	TechStack   []string               `yaml:"tech_stack,omitempty"`
+	Conventions map[string]interface{} `yaml:"conventions,omitempty"`
+	Content     string                 `yaml:"-"` // Markdown content after frontmatter
+}

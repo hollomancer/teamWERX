@@ -35,3 +35,10 @@ type DiscussionManager interface {
 	Load(goalID string) ([]model.DiscussionEntry, error)
 	AddEntry(goalID string, entry *model.DiscussionEntry) error
 }
+
+// CharterManager defines the interface for managing the project charter.
+type CharterManager interface {
+	Read() (*model.Charter, error)
+	Write(charter *model.Charter) error
+	Exists() bool
+}

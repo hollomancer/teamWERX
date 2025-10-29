@@ -13,10 +13,12 @@ import (
 //   - SpecsDir:   ".teamwerx/specs"
 //   - GoalsDir:   ".teamwerx/goals"
 //   - ChangesDir: ".teamwerx/changes"
+//   - CharterDir: ".teamwerx"
 type AppOptions struct {
 	SpecsDir   string
 	GoalsDir   string
 	ChangesDir string
+	CharterDir string
 }
 
 // withDefaults returns a copy of the options, filling in missing values.
@@ -29,6 +31,9 @@ func (o AppOptions) withDefaults() AppOptions {
 	}
 	if o.ChangesDir == "" {
 		o.ChangesDir = ".teamwerx/changes"
+	}
+	if o.CharterDir == "" {
+		o.CharterDir = ".teamwerx"
 	}
 	return o
 }
@@ -53,6 +58,7 @@ type App struct {
 	PlanManager       PlanManager
 	ChangeManager     ChangeManager
 	DiscussionManager DiscussionManager
+	CharterManager    CharterManager
 }
 
 // NewApp constructs an App with the provided options, applying defaults for any
@@ -72,6 +78,9 @@ func NewApp(opts AppOptions) (*App, error) {
 	if err := fileutil.MkdirAll(o.ChangesDir, 0o755); err != nil {
 		return nil, fmt.Errorf("ensure changes dir: %w", err)
 	}
+	if err := fileutil.MkdirAll(o.CharterDir, 0o755); err != nil {
+		return nil, fmt.Errorf("ensure charter dir: %w", err)
+	}
 
 	// Wire managers
 	specMgr := NewSpecManager(o.SpecsDir)
@@ -79,6 +88,7 @@ func NewApp(opts AppOptions) (*App, error) {
 	planMgr := NewPlanManager(o.GoalsDir)
 	changeMgr := NewChangeManager(o.ChangesDir, specMgr, specMerger)
 	discMgr := NewDiscussionManager(o.GoalsDir)
+	charterMgr := NewCharterManager(o.CharterDir)
 
 	return &App{
 		Options:           o,
@@ -87,6 +97,7 @@ func NewApp(opts AppOptions) (*App, error) {
 		PlanManager:       planMgr,
 		ChangeManager:     changeMgr,
 		DiscussionManager: discMgr,
+		CharterManager:    charterMgr,
 	}, nil
 }
 

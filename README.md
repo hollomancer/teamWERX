@@ -17,11 +17,12 @@ teamWERX helps you organize development work into clear, traceable goals with th
 
 ## How it works
 
-1. **Organize by goals** — Create numbered workspaces (`.teamwerx/goals/001-demo/`) for each feature or project
-2. **Plan your work** — Break down goals into tasks stored in `plan.json`
-3. **Capture decisions** — Log discussions and context in `discuss.md` 
-4. **Track specs** — Manage specifications as Markdown files with version control
-5. **Work with AI** — AI agents read `AGENTS.md` to understand your workflow and help execute tasks
+1. **Create your charter** — Define your project's purpose, tech stack, and conventions in `.teamwerx/charter.md`
+2. **Organize by goals** — Create numbered workspaces (`.teamwerx/goals/001-demo/`) for each feature or project
+3. **Plan your work** — Break down goals into tasks stored in `plan.json`
+4. **Capture decisions** — Log discussions and context in `discuss.md` 
+5. **Track specs** — Manage specifications as Markdown files with version control
+6. **Work with AI** — AI agents read the charter and `AGENTS.md` to understand your workflow and help execute tasks
 
 All artifacts are plain text files that live alongside your code, making them easy to read, diff, and version control.
 
@@ -87,7 +88,27 @@ make build
 
 ## Getting Started
 
-### 1. Set up your first goal workspace
+### 1. Initialize your project charter
+
+The charter is your project's steering document - it defines purpose, tech stack, and conventions for AI agents and team members:
+
+```bash
+teamwerx charter init
+```
+
+This creates `.teamwerx/charter.md` with a template you can customize. Edit it to include:
+- Project purpose and vision
+- Technology stack
+- Coding conventions and standards
+- AI agent instructions specific to your project
+
+View your charter anytime:
+
+```bash
+teamwerx charter show
+```
+
+### 2. Set up your first goal workspace
 
 Create a directory for your goal:
 
@@ -95,7 +116,7 @@ Create a directory for your goal:
 mkdir -p .teamwerx/goals/001-my-feature
 ```
 
-### 2. Start planning
+### 3. Start planning
 
 Add tasks to your plan:
 
@@ -111,13 +132,13 @@ View your plan:
 teamwerx plan show --goal 001-my-feature
 ```
 
-### 3. Capture decisions as you work
+### 4. Capture decisions as you work
 
 ```bash
 teamwerx discuss add --goal 001-my-feature "Decided to use REST instead of GraphQL for simplicity"
 ```
 
-### 4. Track progress
+### 5. Track progress
 
 Complete tasks as you finish them:
 
@@ -206,6 +227,27 @@ The AI can run teamWERX commands to update plans and discussions as you work tog
 
 ## Command Reference
 
+### Charter
+
+Create and view your project's steering document.
+
+```bash
+# Initialize charter (first time only)
+teamwerx charter init
+
+# Display charter
+teamwerx charter show
+```
+
+The charter lives at `.teamwerx/charter.md` and contains:
+- **Purpose** — Project vision and goals
+- **Tech Stack** — Languages, frameworks, databases
+- **Conventions** — Commit formats, branch naming, code standards
+- **Governance** — Decision-making processes
+- **AI Instructions** — Specific guidance for AI coding assistants
+
+This is the first thing you should create when starting a project with teamWERX.
+
 ### Plans
 
 Manage task lists for your goals.
@@ -288,6 +330,7 @@ Your `.teamwerx/` directory contains all project artifacts:
 
 ```
 .teamwerx/
+├── charter.md                  # Project steering document
 ├── goals/
 │   └── 001-my-feature/
 │       ├── plan.json           # Task list
@@ -305,6 +348,7 @@ Your `.teamwerx/` directory contains all project artifacts:
 
 ### Files you create manually
 
+- **charter.md** — Project steering document (created with `teamwerx charter init`, then edited)
 - **research.md** — Background research and context for the goal
 - **summary.md** — Knowledge summary (what worked, gotchas, patterns)
 - **implementation/** — Any implementation notes or artifacts you want to track
@@ -376,6 +420,13 @@ teamwerx discuss add --goal 002-profiles "Bio limited to 500 chars"
 Each goal workspace is isolated, so agents don't interfere with each other.
 
 ## Best Practices
+
+### Start with the charter
+
+Always run `teamwerx charter init` when starting a new project and customize it before creating goals. The charter:
+- Guides AI agents on how to work with your codebase
+- Documents decisions that apply across all goals
+- Establishes conventions for the entire team
 
 ### Goal naming
 

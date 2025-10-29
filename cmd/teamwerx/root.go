@@ -110,6 +110,24 @@ var (
 		RunE:  runDiscussAdd,
 	}
 
+	charterCmd = &cobra.Command{
+		Use:   "charter",
+		Short: "Work with project charter",
+		Long:  "Commands for creating and viewing the project charter - your project's steering document.",
+	}
+
+	charterInitCmd = &cobra.Command{
+		Use:   "init",
+		Short: "Initialize project charter",
+		RunE:  runCharterInit,
+	}
+
+	charterShowCmd = &cobra.Command{
+		Use:   "show",
+		Short: "Display project charter",
+		RunE:  runCharterShow,
+	}
+
 	completionCmd = &cobra.Command{
 		Use:   "completion [bash|zsh|fish|powershell]",
 		Short: "Generate shell completion scripts",
@@ -122,6 +140,7 @@ var (
 	goalsBaseDir   string
 	goalID         string
 	changesBaseDir string
+	charterBaseDir string
 	changeID       string
 	taskID         string
 )
@@ -169,6 +188,11 @@ func init() {
 	discussCmd.AddCommand(discussListCmd)
 	discussCmd.AddCommand(discussAddCmd)
 
+	// Attach charter hierarchy: root -> charter -> [init|show]
+	rootCmd.AddCommand(charterCmd)
+	charterCmd.AddCommand(charterInitCmd)
+	charterCmd.AddCommand(charterShowCmd)
+
 	// Completion command
 	rootCmd.AddCommand(completionCmd)
 
@@ -202,6 +226,8 @@ func init() {
 	_ = changeArchiveCmd.MarkFlagRequired("id")
 	changeResolveCmd.Flags().StringVar(&changeID, "id", "", "Change ID to resolve conflicts for")
 	_ = changeResolveCmd.MarkFlagRequired("id")
+
+	charterCmd.PersistentFlags().StringVar(&charterBaseDir, "charter-dir", ".teamwerx", "Base directory for charter")
 }
 
 func runSpecList(cmd *cobra.Command, args []string) error {
@@ -714,4 +740,121 @@ func runCompletion(cmd *cobra.Command, args []string) error {
 	default:
 		return fmt.Errorf("unsupported shell: %s", args[0])
 	}
+}
+
+func runCharterInit(cmd *cobra.Command, args []string) error {
+	app, err := core.NewApp(core.AppOptions{
+		SpecsDir:   specsBaseDir,
+		GoalsDir:   goalsBaseDir,
+		ChangesDir: changesBaseDir,
+		CharterDir: charterBaseDir,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to init app: %w", err)
+	}
+
+	// Check if charter already exists
+	if app.CharterManager.Exists() {
+		color.Yellow("Charter already exists. Edit .teamwerx/charter.md directly or use 'teamwerx charter show' to view it.")
+		return nil
+	}
+
+	// Create default charter
+	charter := &model.Charter{
+		Title:   "Project Charter",
+		Version: "1.0.0",
+		Purpose: "Define the purpose and goals of this project",
+		TechStack: []string{
+			"Add your technology stack here",
+		},
+		Conventions: map[string]interface{}{
+			"commit_prefix": "[PROJECT]",
+			"branch_naming": "feature/*, bugfix/*",
+		},
+		Content: `# Project Charter
+
+## Purpose
+
+[Describe the purpose and vision of this project]
+
+## Governance
+
+[Define decision-making processes, approval workflows, etc.]
+
+## Standards
+
+[Document coding standards, conventions, and best practices]
+
+## AI Agent Instructions
+
+[Specific instructions for AI coding assistants working on this project]
+`,
+	}
+
+	if err := app.CharterManager.Write(charter); err != nil {
+		return fmt.Errorf("failed to write charter: %w", err)
+	}
+
+	ok := color.New(color.FgGreen, color.Bold)
+	ok.Println("Charter initialized at .teamwerx/charter.md")
+	fmt.Println("\nEdit the file to customize your project's steering document.")
+	fmt.Println("This charter will guide AI agents and team members throughout the project.")
+
+	return nil
+}
+
+func runCharterShow(cmd *cobra.Command, args []string) error {
+	app, err := core.NewApp(core.AppOptions{
+		SpecsDir:   specsBaseDir,
+		GoalsDir:   goalsBaseDir,
+		ChangesDir: changesBaseDir,
+		CharterDir: charterBaseDir,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to init app: %w", err)
+	}
+
+	charter, err := app.CharterManager.Read()
+	if err != nil {
+		color.Yellow("No charter found. Run 'teamwerx charter init' to create one.")
+		return nil
+	}
+
+	// Display charter
+	hdr := color.New(color.FgCyan, color.Bold)
+	hdr.Printf("Charter: %s\n", charter.Title)
+
+	if charter.Version != "" {
+		fmt.Printf("Version: %s\n", charter.Version)
+	}
+	if !charter.Created.IsZero() {
+		fmt.Printf("Created: %s\n", charter.Created.Format("2006-01-02"))
+	}
+	if !charter.Updated.IsZero() {
+		fmt.Printf("Updated: %s\n", charter.Updated.Format("2006-01-02"))
+	}
+
+	if charter.Purpose != "" {
+		fmt.Printf("\nPurpose: %s\n", charter.Purpose)
+	}
+
+	if len(charter.TechStack) > 0 {
+		fmt.Println("\nTech Stack:")
+		for _, tech := range charter.TechStack {
+			fmt.Printf("  - %s\n", tech)
+		}
+	}
+
+	if len(charter.Conventions) > 0 {
+		fmt.Println("\nConventions:")
+		for key, val := range charter.Conventions {
+			fmt.Printf("  %s: %v\n", key, val)
+		}
+	}
+
+	if charter.Content != "" {
+		fmt.Println("\n" + charter.Content)
+	}
+
+	return nil
 }
