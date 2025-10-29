@@ -1,9 +1,8 @@
 # teamWERX
 [![Release (goreleaser)](https://github.com/teamwerx/teamwerx/actions/workflows/release.yml/badge.svg)](https://github.com/teamwerx/teamwerx/actions/workflows/release.yml)
-
 See also: [Contributing (Go)](CONTRIBUTING-GO.md)
-## Go CLI Installation
 
+## Go CLI Installation
 
 > Release builds are published automatically via GoReleaser when tags (v*) are pushed. Download binaries from the GitHub Releases page.
 
@@ -218,7 +217,7 @@ Use these commands with an existing `.teamwerx` workspace:
 ## Commands
 
 All commands are **non-destructive**. Instead of overwriting existing artifacts, they append new entries or create new files so prior context remains available in git history.
-Implemented Go CLI command groups: spec, plan, discuss, change, migrate, completion. Legacy Node-era commands (init, goal, use, research, status, execute, complete, reflect, summarize, charter, archive) are no longer available in main; see docs/archive/CONTRIBUTING-node.md for historical reference.
+Implemented Go CLI command groups: spec, plan, discuss, change, migrate, completion.
 
 ### Command Behavior (detailed)
 
