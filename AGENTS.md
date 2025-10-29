@@ -63,13 +63,10 @@ Interactively resolve divergence, then re-apply.
 ### `teamwerx change archive --id <change-id>`
 Archive a change folder after it’s applied.
 
-### `teamwerx migrate check`
-Validate an existing `.teamwerx` workspace for compatibility.
-
 ### `teamwerx completion [bash|zsh|fish|powershell]`
 Generate shell completion scripts.
 
-Note: Legacy Node-era commands (`goal`, `use`, `research`, `execute`, `complete`, `reflect`, `summarize`, `charter`, `archive`) are not implemented in the Go CLI. Manage these artifacts manually as needed. See `README.md` and `MIGRATION.md` for details.
+Note: Legacy Node-era commands (`goal`, `use`, `research`, `execute`, `complete`, `reflect`, `summarize`, `charter`, `archive`) are not implemented in the Go CLI. Manage these artifacts manually as needed. See `README.md` for details.
 
 ## Conventions
 

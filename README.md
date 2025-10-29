@@ -1,841 +1,525 @@
 # teamWERX
+
 [![Release (goreleaser)](https://github.com/hollomancer/teamwerx/actions/workflows/release.yml/badge.svg)](https://github.com/hollomancer/teamwerx/actions/workflows/release.yml)
-See also: [Contributing (Go)](CONTRIBUTING-GO.md)
 
-## Go CLI Installation
+> A lightweight CLI for managing development goals, specifications, and AI-assisted workflows.
 
-> Release builds are published automatically via GoReleaser when tags (v*) are pushed. Download binaries from the GitHub Releases page.
+## What is teamWERX?
 
-You can install and run the Go-based CLI in a few different ways. Choose the one that fits your workflow:
+teamWERX helps you organize development work into clear, traceable goals with the help of AI coding assistants. It's designed for individual developers who:
 
-- Using Go (quickest if you have Go installed):
-  - Go 1.18+ required
-  - Run:
-    - go install github.com/teamwerx/teamwerx/cmd/teamwerx@latest
-  - The binary will be placed in your GOPATH/bin (or GOBIN) and available on your PATH if configured.
+- Want to keep their work organized across multiple features or goals
+- Work with AI coding assistants (Claude, ChatGPT, Copilot, etc.)
+- Need to track decisions, specifications, and task progress
+- Value simplicity and git-based version control
 
-- From source (recommended for contributors):
-  - Clone this repository
-  - Build the CLI:
-    - make build
-    - or: go build -v -o teamwerx ./cmd/teamwerx
+**Key principle**: Everything is a file. Your goals, plans, discussions, and specifications live in `.teamwerx/` and version with your code in git.
 
-- From releases (multi-platform archives):
-  - We use GoReleaser to publish macOS, Linux, and Windows archives.
-  - Download the archive for your OS/arch from the Releases page, extract, and place the teamwerx binary on your PATH.
+## How it works
 
-Notes:
-- The CLI is non-destructive by design and operates against a .teamwerx workspace in your project.
-- For non-interactive/CI runs, set TEAMWERX_CI=1 to disable prompts.
+1. **Organize by goals** — Create numbered workspaces (`.teamwerx/goals/001-demo/`) for each feature or project
+2. **Plan your work** — Break down goals into tasks stored in `plan.json`
+3. **Capture decisions** — Log discussions and context in `discuss.md` 
+4. **Track specs** — Manage specifications as Markdown files with version control
+5. **Work with AI** — AI agents read `AGENTS.md` to understand your workflow and help execute tasks
 
-## Go CLI Usage
+All artifacts are plain text files that live alongside your code, making them easy to read, diff, and version control.
 
-Below are common tasks and example commands. All commands accept base directory flags so you can target different workspaces if needed.
+## Quick Example
 
-Workspace flags (optional, default to .teamwerx/*):
-- --specs-dir: defaults to .teamwerx/specs
-- --goals-dir: defaults to .teamwerx/goals
-- --changes-dir: defaults to .teamwerx/changes
+Here's a typical workflow for adding a new feature:
 
-Tip: add TEAMWERX_CI=1 to skip interactive prompts in scripts.
+```bash
+# 1. Add tasks to your goal's plan
+teamwerx plan add --goal 001-auth "Implement login endpoint"
+teamwerx plan add --goal 001-auth "Add password hashing"
+teamwerx plan add --goal 001-auth "Write authentication tests"
 
-### Specs
+# 2. See what's on your plate
+teamwerx plan list --goal 001-auth
+# Output:
+# - T01 [pending] Implement login endpoint
+# - T02 [pending] Add password hashing
+# - T03 [pending] Write authentication tests
 
-List all specs:
-- TEAMWERX_CI=1 teamwerx spec list --specs-dir .teamwerx/specs
+# 3. Capture a design decision
+teamwerx discuss add --goal 001-auth "Using bcrypt for password hashing"
 
-Show a specific spec summary (first 10 requirements):
-- TEAMWERX_CI=1 teamwerx spec show auth --specs-dir .teamwerx/specs
+# 4. Mark tasks complete as you finish them
+teamwerx plan complete --goal 001-auth --task T01
 
-### Plans
+# 5. Review your discussion log
+teamwerx discuss list --goal 001-auth
+```
 
-Add a task to a goal’s plan:
-- TEAMWERX_CI=1 teamwerx plan add --goals-dir .teamwerx/goals --goal 001-demo "Set up CI"
-
-List tasks for a goal:
-- TEAMWERX_CI=1 teamwerx plan list --goals-dir .teamwerx/goals --goal 001-demo
-
-Complete a task:
-- TEAMWERX_CI=1 teamwerx plan complete --goals-dir .teamwerx/goals --goal 001-demo --task T01
-
-Show plan details:
-- TEAMWERX_CI=1 teamwerx plan show --goals-dir .teamwerx/goals --goal 001-demo
-
-### Discussions
-
-Add a discussion entry to a goal:
-- TEAMWERX_CI=1 teamwerx discuss add --goals-dir .teamwerx/goals --goal 001-demo "Initial planning notes"
-
-List discussion entries:
-- TEAMWERX_CI=1 teamwerx discuss list --goals-dir .teamwerx/goals --goal 001-demo
-
-### Changes
-
-List changes:
-- TEAMWERX_CI=1 teamwerx change list --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs
-
-Apply a change (may detect conflicts):
-- TEAMWERX_CI=1 teamwerx change apply --id CH-123 --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs
-
-Resolve conflicts interactively (refresh base fingerprints or skip domains, then re-apply):
-- TEAMWERX_CI=1 teamwerx change resolve --id CH-123 --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs
-
-Archive a change after it’s applied:
-- TEAMWERX_CI=1 teamwerx change archive --id CH-123 --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs
-
-### Migration Check
-
-Validate that your existing .teamwerx workspace is compatible:
-- TEAMWERX_CI=1 teamwerx migrate check \
-  --specs-dir .teamwerx/specs \
-  --goals-dir .teamwerx/goals \
-  --changes-dir .teamwerx/changes
-
-This will parse specs, plans, discussions, and changes, then report any issues.
-
-### Shell Completions
-
-Generate completion scripts for your shell (bash|zsh|fish|powershell):
-- teamwerx completion bash
-- teamwerx completion zsh
-- teamwerx completion fish
-- teamwerx completion powershell
-
-Load or install the output according to your shell’s recommended approach.
-
-### Non-Interactive Mode
-
-Set TEAMWERX_CI=1 to disable interactive prompts and use defaults within commands. This is helpful for CI/CD or scripted runs:
-- TEAMWERX_CI=1 teamwerx spec list
-- TEAMWERX_CI=1 teamwerx plan add --goal 001-demo "Automated task"
-
-### Building From Source (Developers)
-
-- Prerequisites: Go 1.18+
-- Build:
-  - make build
-  - or: go build -v -o teamwerx ./cmd/teamwerx
-- Test:
-  - make test
-- Lint:
-  - Ensure golangci-lint is installed, then: make lint
-
-For releases, we use GoReleaser with a multi-platform configuration. CI builds and publishes archives on tagged releases.
-
-A development framework for individual developers working with multiple AI agents.
-
-## Overview
-
-teamWERX is a command-line interface (CLI) tool that provides a structured workflow to bring clarity, predictability, and efficiency to the software development lifecycle by coordinating the developer and their AI assistants around shared goals and plans.
-
-## Core Philosophy
-
-- **Goal-Oriented**: Development starts with clear definitions of high-level goals and desired outcomes
-- **Specification-Driven**: Goals are translated into concrete specifications through research and discussion with AI agents
-- **Multi-Agent Coordination**: The framework orchestrates multiple AI agents working on different aspects of a project, all guided by a single developer
-- **Traceability**: All decisions, discussions, and plans are documented and version-controlled, providing a clear audit trail
-- **Non-Destructive**: All commands append to existing artifacts rather than overwriting them, preserving full history in git
-
-## Features
-
-- **Goal-Oriented Development**: Start with clear, measurable goals
-- **AI Agent Coordination**: Work with multiple AI agents on different aspects of your project
-- **Git-Based Versioning**: All artifacts tracked in git for complete traceability
-- **Structured Workflow**: Research → Discussion → Planning → Execution
-- **Multi-Goal Support**: Work on multiple goals concurrently
-- **Numbered Workspaces**: Deterministic numbering for goals, tasks, and discussions
+Everything you create is stored in `.teamwerx/goals/001-auth/`:
+- `plan.json` — Your task list with completion status
+- `discuss.md` — Your decision log and notes
+- `research.md` — Background research (you create manually)
+- `implementation/` — Implementation notes (optional)
 
 ## Installation
 
-See "Go CLI Installation" above. Node.js-based installation via npm has been removed in favor of the Go CLI. Use go install, build from source, or download a release binary.
+### Download pre-built binary (recommended)
 
-## Quick Start
+1. Go to [Releases](https://github.com/hollomancer/teamwerx/releases)
+2. Download the archive for your OS (macOS, Linux, Windows)
+3. Extract and place `teamwerx` binary on your PATH
+
+### Install with Go
+
+If you have Go 1.18+ installed:
 
 ```bash
-# List specs
-teamwerx spec list --specs-dir .teamwerx/specs
-
-# Add and list tasks for a goal plan
-teamwerx plan add --goals-dir .teamwerx/goals --goal 001-demo "Set up CI"
-teamwerx plan list --goals-dir .teamwerx/goals --goal 001-demo
-teamwerx plan complete --goals-dir .teamwerx/goals --goal 001-demo --task T01
-
-# Add and list discussion entries
-teamwerx discuss add --goals-dir .teamwerx/goals --goal 001-demo "Initial planning notes"
-teamwerx discuss list --goals-dir .teamwerx/goals --goal 001-demo
-
-# Check workspace migration/compatibility
-teamwerx migrate check --specs-dir .teamwerx/specs --goals-dir .teamwerx/goals --changes-dir .teamwerx/changes
+go install github.com/teamwerx/teamwerx/cmd/teamwerx@latest
 ```
 
-## Workflow
+The binary will be installed to `$GOPATH/bin` (usually `~/go/bin`).
 
-The teamWERX workflow is divided into main phases. Multiple goals can progress through these phases concurrently, with different AI agents potentially working on different goals under the developer's direction.
+### Build from source
 
-Core phases:
-
-1. **Goal Setting** — Define the high-level goal and success criteria.
-2. **Research** — Generate a codebase-aware research report to surface constraints and options.
-3. **Discussion** — Capture reasoning, proposals, and decisions in an append-only discussion log.
-4. **Planning** — Create a numbered task plan (T01, T02, ...) for implementation.
-5. **Execution** — Apply changes, one task at a time, and record progress.
-6. **Change Management & Summaries** — Propose changes, capture reflections, and produce a knowledge summary.
-
-### Quick Recipe (Go CLI)
-
-Use these commands with an existing `.teamwerx` workspace:
-
-- TEAMWERX_CI=1 teamwerx spec list --specs-dir .teamwerx/specs
-- TEAMWERX_CI=1 teamwerx plan add --goals-dir .teamwerx/goals --goal 001-demo "Add login endpoint"
-- TEAMWERX_CI=1 teamwerx plan list --goals-dir .teamwerx/goals --goal 001-demo
-- TEAMWERX_CI=1 teamwerx plan complete --goals-dir .teamwerx/goals --goal 001-demo --task T01
-- TEAMWERX_CI=1 teamwerx discuss add --goals-dir .teamwerx/goals --goal 001-demo "Initial planning notes"
-- TEAMWERX_CI=1 teamwerx discuss list --goals-dir .teamwerx/goals --goal 001-demo
-- TEAMWERX_CI=1 teamwerx change list --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs
-- TEAMWERX_CI=1 teamwerx migrate check --specs-dir .teamwerx/specs --goals-dir .teamwerx/goals --changes-dir .teamwerx/changes
-
-### Command → Primary file mapping
-
-- `teamwerx spec` → reads `.teamwerx/specs/*/spec.md`
-- `teamwerx plan` → reads/writes `.teamwerx/goals/<goal-id>/plan.json`
-- `teamwerx discuss` → appends `.teamwerx/goals/<goal-id>/discuss.md`
-- `teamwerx change` → reads `.teamwerx/changes/*/change.json` and `.teamwerx/specs/*/spec.md`; writes specs on apply; moves change folders on archive
-- `teamwerx migrate` → reads specs, plans, discussions, and changes for validation
-
-### Best-practices (recommendations)
-
-- Always pass `--goal <id>` explicitly to avoid accidental updates to the wrong workspace.
-- Keep a small, focused plan (T01–T05) per session to reduce conflicts and make reviews easy.
-- Preserve traceability: make small, focused commits and reference task IDs (e.g., T01) in commit messages.
-
-**Key Points:**
-
-- The canonical plan file is `.teamwerx/goals/00X-<slug>/plan.json`; goal status is derived at read-time by inspecting that plan (do not rely on a persisted `plan.status` elsewhere).
-- Commands are mostly non-destructive and append to workspace artifacts; `execute` and `complete` change plan/task state and may write implementation notes.
-- Use `--json` output and `--dry-run` where available to integrate teamWERX into automation or CI safely.
-
-## Commands
-
-All commands are **non-destructive**. Instead of overwriting existing artifacts, they append new entries or create new files so prior context remains available in git history.
-Implemented Go CLI command groups: spec, plan, discuss, change, migrate, completion.
-
-### Command Behavior (detailed)
-
-Below are the implemented Go CLI commands, their primary flags, which files they read/write, examples, and safety notes.
-
-- spec
-
-  - list
-    - What it does: Lists available spec domains.
-    - Flags:
-      - `--specs-dir` — base directory (default: `.teamwerx/specs`)
-    - Files read/written:
-      - Reads: `.teamwerx/specs/*/spec.md`
-    - Example:
-      - `teamwerx spec list --specs-dir .teamwerx/specs`
-    - Safety notes:
-      - Read-only.
-
-  - show <domain>
-    - What it does: Shows details for a spec domain (first 10 requirements).
-    - Flags:
-      - `--specs-dir` — base directory (default: `.teamwerx/specs`)
-    - Files read/written:
-      - Reads: `.teamwerx/specs/<domain>/spec.md`
-    - Example:
-      - `teamwerx spec show auth --specs-dir .teamwerx/specs`
-    - Safety notes:
-      - Read-only.
-
-- plan
-
-  - add
-    - What it does: Adds a task to a goal’s plan.
-    - Flags:
-      - `--goals-dir` — base directory (default: `.teamwerx/goals`)
-      - `--goal` — goal ID (e.g., `001-demo`)
-    - Files read/written:
-      - Reads/writes: `.teamwerx/goals/<goal-id>/plan.json`
-    - Example:
-      - `teamwerx plan add --goals-dir .teamwerx/goals --goal 001-demo "Set up CI"`
-    - Safety notes:
-      - Creates `plan.json` if missing. Non-destructive append.
-
-  - list
-    - What it does: Lists tasks for a goal’s plan.
-    - Flags:
-      - `--goals-dir`, `--goal`
-    - Files read/written:
-      - Reads: `.teamwerx/goals/<goal-id>/plan.json`
-    - Example:
-      - `teamwerx plan list --goals-dir .teamwerx/goals --goal 001-demo`
-    - Safety notes:
-      - Read-only.
-
-  - complete
-    - What it does: Marks a task as completed in the plan.
-    - Flags:
-      - `--goals-dir`, `--goal`, `--task` (e.g., `T01`)
-    - Files read/written:
-      - Reads/writes: `.teamwerx/goals/<goal-id>/plan.json`
-    - Example:
-      - `teamwerx plan complete --goals-dir .teamwerx/goals --goal 001-demo --task T01`
-    - Safety notes:
-      - Writes only to plan.json; review diffs before committing.
-
-  - show
-    - What it does: Shows a goal’s plan details.
-    - Flags:
-      - `--goal` — goal ID
-    - Files read/written:
-      - Reads: `.teamwerx/goals/<goal-id>/plan.json`
-    - Example:
-      - `teamwerx plan show --goals-dir .teamwerx/goals --goal 001-demo`
-    - Safety notes:
-      - Read-only.
-
-- discuss
-
-  - add
-    - What it does: Appends a discussion entry to a goal (YAML front-matter blocks).
-    - Flags:
-      - `--goals-dir`, `--goal`
-    - Files read/written:
-      - Appends to: `.teamwerx/goals/<goal-id>/discuss.md`
-    - Example:
-      - `teamwerx discuss add --goals-dir .teamwerx/goals --goal 001-demo "Initial planning notes"`
-    - Safety notes:
-      - Append-only; preserves history.
-
-  - list
-    - What it does: Lists discussion entries for a goal.
-    - Flags:
-      - `--goals-dir`, `--goal`
-    - Files read/written:
-      - Reads: `.teamwerx/goals/<goal-id>/discuss.md`
-    - Example:
-      - `teamwerx discuss list --goals-dir .teamwerx/goals --goal 001-demo`
-    - Safety notes:
-      - Read-only.
-
-- change
-
-  - list
-    - What it does: Lists changes.
-    - Flags:
-      - `--changes-dir` (default: `.teamwerx/changes`), `--specs-dir`
-    - Files read/written:
-      - Reads: `.teamwerx/changes/*/change.json`, `.teamwerx/specs/*/spec.md`
-    - Example:
-      - `teamwerx change list --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs`
-    - Safety notes:
-      - Read-only.
-
-  - apply
-    - What it does: Applies a change by ID, merging spec deltas where possible.
-    - Flags:
-      - `--id`, `--changes-dir`, `--specs-dir`
-    - Files read/written:
-      - Reads: change JSON and spec files
-      - Writes: merged spec files on success
-    - Example:
-      - `teamwerx change apply --id CH-123 --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs`
-    - Safety notes:
-      - May detect divergence; see `change resolve`.
-
-  - resolve
-    - What it does: Interactively resolves spec merge conflicts (divergence) per domain.
-    - Flags:
-      - `--id`, `--changes-dir`, `--specs-dir`
-    - Files read/written:
-      - Reads/writes: change and spec files as part of resolution
-    - Example:
-      - `teamwerx change resolve --id CH-123 --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs`
-    - Safety notes:
-      - Offers refresh/skip/cancel options; re-run apply after resolving.
-
-  - archive
-    - What it does: Archives a change after it’s applied.
-    - Flags:
-      - `--id`, `--changes-dir`, `--specs-dir`
-    - Files read/written:
-      - Moves change folder to archive under changes base dir
-    - Example:
-      - `teamwerx change archive --id CH-123 --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs`
-    - Safety notes:
-      - Destructive move of change folder (non-spec files unaffected).
-
-- migrate
-
-  - check
-    - What it does: Validates an existing `.teamwerx` workspace for compatibility.
-    - Flags:
-      - `--specs-dir`, `--goals-dir`, `--changes-dir`
-    - Files read/written:
-      - Reads: specs, plan.json, discuss.md, changes
-    - Example:
-      - `teamwerx migrate check --specs-dir .teamwerx/specs --goals-dir .teamwerx/goals --changes-dir .teamwerx/changes`
-    - Safety notes:
-      - Read-only; returns non-zero on failure.
-
-- completion
-
-  - [bash|zsh|fish|powershell]
-    - What it does: Generates shell completion scripts.
-    - Example:
-      - `teamwerx completion bash`
-      - `teamwerx completion zsh`
-      - `teamwerx completion fish`
-      - `teamwerx completion powershell`
-    - Safety notes:
-      - Redirect or install according to your shell’s instructions.
-
-#### General Safety & Integration Recommendations
-
-- Prefer explicit `--goal <id>`/base-dir flags in automation to avoid implicit context.
-- Use `TEAMWERX_CI=1` to disable prompts in CI.
-- Keep changes small; review diffs before committing when commands write files.
-
-## Project Structure
-
-After initialization, teamWERX creates the following structure:
-
-```
-project-root/
-├── AGENTS.md
-└── .teamwerx/
-    ├── goals/
-    │   └── 001-demo/
-    │       ├── discuss.md
-    │       ├── plan.json
-    │       ├── research.md
-    │       ├── summary.md
-    │       └── implementation/
-    ├── specs/
-    │   └── <domain>/
-    │       └── spec.md
-    └── changes/
-        ├── <change-id>/
-        │   └── change.json
-        └── .archive/
-            └── <change-id>/
+```bash
+git clone https://github.com/hollomancer/teamwerx.git
+cd teamwerx
+make build
+# Binary is created as ./teamwerx
 ```
 
-### Structure Details
+## Getting Started
 
-Each goal has two parts:
+### 1. Set up your first goal workspace
 
-1. **Goal file** (`goal-name.md`) - Metadata, success criteria, and notes
-2. **Numbered workspace** (`00X-goal-name/`) - Discussion, plan, research, and implementation records
+Create a directory for your goal:
 
-**Workspace numbering:**
+```bash
+mkdir -p .teamwerx/goals/001-my-feature
+```
 
-- Goals get sequential three-digit IDs (`001`, `002`, ...) derived from filesystem
-- Discussion entries use `D01`, `D02`, ...
-- Reflection entries use `R01`, `R02`, ...
-- Tasks use `T01`, `T02`, ...
-- Implementation records match task IDs (`T01.md`, `T02.md`, ...)
+### 2. Start planning
 
-**Files to commit:**
+Add tasks to your plan:
 
-- `.teamwerx/goals/`
-- `.teamwerx/specs/`
-- `.teamwerx/changes/`
-- `AGENTS.md`
+```bash
+teamwerx plan add --goal 001-my-feature "Research existing solutions"
+teamwerx plan add --goal 001-my-feature "Design the API"
+teamwerx plan add --goal 001-my-feature "Implement core logic"
+```
 
-**Files to ignore:**
+View your plan:
 
-- `.teamwerx/.current-goal` (local state)
-- `.teamwerx/.temp/` (temporary files)
+```bash
+teamwerx plan show --goal 001-my-feature
+```
+
+### 3. Capture decisions as you work
+
+```bash
+teamwerx discuss add --goal 001-my-feature "Decided to use REST instead of GraphQL for simplicity"
+```
+
+### 4. Track progress
+
+Complete tasks as you finish them:
+
+```bash
+teamwerx plan complete --goal 001-my-feature --task T01
+```
+
+Check what's done:
+
+```bash
+teamwerx plan list --goal 001-my-feature
+```
+
+## Common Workflows
+
+### Planning a new feature
+
+```bash
+# Create workspace directory
+mkdir -p .teamwerx/goals/002-user-profiles
+
+# Add implementation tasks
+teamwerx plan add --goal 002-user-profiles "Create user profile model"
+teamwerx plan add --goal 002-user-profiles "Add profile endpoints"
+teamwerx plan add --goal 002-user-profiles "Build profile UI"
+
+# Document your approach
+teamwerx discuss add --goal 002-user-profiles "Profiles will use separate table for extensibility"
+```
+
+### Working on multiple goals
+
+You can work on several goals concurrently. Each has its own workspace:
+
+```bash
+# Check progress on feature A
+teamwerx plan show --goal 001-auth
+
+# Add task to feature B
+teamwerx plan add --goal 002-profiles "Add avatar upload"
+
+# Switch context by changing goal ID in commands
+teamwerx discuss list --goal 001-auth
+teamwerx discuss list --goal 002-profiles
+```
+
+### Reviewing what's been done
+
+```bash
+# See all tasks and their status
+teamwerx plan show --goal 001-auth
+
+# Review decision log
+teamwerx discuss list --goal 001-auth
+
+# Check discussion details
+cat .teamwerx/goals/001-auth/discuss.md
+```
+
+### Managing specifications
+
+teamWERX can track project specifications as Markdown files:
+
+```bash
+# List all specs
+teamwerx spec list
+
+# View a specific spec's requirements
+teamwerx spec show authentication
+
+# Specs are stored at .teamwerx/specs/<domain>/spec.md
+# You edit them manually or via change proposals (see Advanced Usage)
+```
+
+### Using with AI assistants
+
+teamWERX is designed to work seamlessly with AI coding assistants. The `AGENTS.md` file in your project root tells AI agents how to use teamWERX commands.
+
+When working with an AI:
+
+1. **Give context**: "Check the plan for goal 001-auth"
+2. **Ask for updates**: "Add a task to implement rate limiting"  
+3. **Capture decisions**: "Log our discussion about using JWT tokens"
+
+The AI can run teamWERX commands to update plans and discussions as you work together.
+
+## Command Reference
+
+### Plans
+
+Manage task lists for your goals.
+
+```bash
+# Add a task
+teamwerx plan add --goal <goal-id> "Task description"
+
+# List all tasks
+teamwerx plan list --goal <goal-id>
+
+# Mark task complete
+teamwerx plan complete --goal <goal-id> --task T01
+
+# Show plan summary
+teamwerx plan show --goal <goal-id>
+```
+
+### Discussions
+
+Capture decisions, notes, and context.
+
+```bash
+# Add discussion entry
+teamwerx discuss add --goal <goal-id> "Your note or decision"
+
+# List all entries
+teamwerx discuss list --goal <goal-id>
+```
+
+Discussion entries are stored as YAML blocks in `discuss.md` with timestamps and sequential IDs (D01, D02, etc.).
+
+### Specs
+
+Work with project specifications.
+
+```bash
+# List all spec domains
+teamwerx spec list
+
+# Show requirements for a domain
+teamwerx spec show <domain-name>
+```
+
+Specs are Markdown files at `.teamwerx/specs/<domain>/spec.md` that you can edit directly.
+
+### Changes (Advanced)
+
+Manage spec change proposals with conflict detection.
+
+```bash
+# List pending changes
+teamwerx change list
+
+# Apply a change (merges into spec)
+teamwerx change apply --id <change-id>
+
+# Resolve conflicts interactively
+teamwerx change resolve --id <change-id>
+
+# Archive applied change
+teamwerx change archive --id <change-id>
+```
+
+Changes are JSON files at `.teamwerx/changes/<id>/change.json` that describe additions, modifications, or removals to spec requirements.
+
+### Utilities
+
+```bash
+# Generate shell completions
+teamwerx completion bash
+teamwerx completion zsh
+teamwerx completion fish
+teamwerx completion powershell
+```
+
+## Workspace Structure
+
+Your `.teamwerx/` directory contains all project artifacts:
+
+```
+.teamwerx/
+├── goals/
+│   └── 001-my-feature/
+│       ├── plan.json           # Task list
+│       ├── discuss.md          # Decision log
+│       ├── research.md         # Research notes (manual)
+│       └── implementation/     # Implementation notes (optional)
+├── specs/
+│   └── authentication/
+│       └── spec.md            # Specification
+└── changes/
+    ├── CH-001/
+    │   └── change.json        # Change proposal
+    └── .archive/              # Archived changes
+```
+
+### Files you create manually
+
+- **research.md** — Background research and context for the goal
+- **summary.md** — Knowledge summary (what worked, gotchas, patterns)
+- **implementation/** — Any implementation notes or artifacts you want to track
+
+### Files teamWERX manages
+
+- **plan.json** — Task list with IDs and completion status
+- **discuss.md** — Discussion log with numbered entries
 
 ## Configuration
 
-Configuration is stored in `AGENTS.md` frontmatter at the project root:
+Basic configuration is in `AGENTS.md` at your project root:
 
 ```yaml
 ---
 teamwerx:
   version: "1.0.0"
-  initialized: "2025-10-25"
+  initialized: "2025-01-15"
 ---
 ```
 
-**Configuration Fields:**
+This minimal frontmatter tracks the teamWERX version. The rest of `AGENTS.md` contains instructions for AI agents.
 
-- `version`: teamWERX specification version
-- `initialized`: ISO 8601 date when teamWERX was initialized
+## Advanced Features
 
-**Note on Token Efficiency:** The configuration is intentionally minimal because `AGENTS.md` is read by AI agents with every command execution. Additional settings are defined as conventions in the specification rather than configuration.
+### Non-interactive mode
 
-## Working with AI Agents
-
-teamWERX is designed to work seamlessly with AI coding assistants. The `AGENTS.md` file provides instructions that AI agents can read and follow.
-
-When you run commands like `teamwerx plan` or `teamwerx discuss`, the AI agent should:
-
-1. Read the relevant sections of `AGENTS.md`
-2. Perform the requested analysis or action
-3. Save the results to the appropriate location
-
-**AI-agnostic design:** teamWERX doesn't call AI APIs. AI agents read `AGENTS.md` to understand commands and execute accordingly.
-
-## Goal States
-
-Goals progress through the following states:
-
-- **draft** - Initial state when created, under refinement
-- **open** - Ready for work but not yet started
-- **in-progress** - Active work being done
-- **blocked** - Temporarily halted due to dependencies or issues
-- **completed** - Success criteria met
-- **cancelled** - Abandoned
-
-**State transitions:** Goal status is automatically derived from plan state. Manual overrides possible for `cancelled` and `archived`.
-
-**Plan/Task states:**
-
-- Plans: `pending` → `in-progress` → `completed` (or `blocked`)
-- Tasks: `pending` → `in-progress` → `completed`
-- Plan status automatically reflects task statuses
-
-## Schemas
-
-Persisted artifact formats:
-- Plan: JSON at `.teamwerx/goals/<goal-id>/plan.json`
-- Change: JSON at `.teamwerx/changes/<id>/change.json`
-- Discussion: YAML front-matter blocks appended to `.teamwerx/goals/<goal-id>/discuss.md`
-- Specs: Markdown under `.teamwerx/specs/<domain>/spec.md`
-
-
-
-### Plan Schema (JSON)
-
-| Field        | Type   | Required | Description                       |
-| ------------ | ------ | -------- | --------------------------------- |
-| `goal_id`    | string | ✓        | Goal ID (e.g., "001-demo")        |
-| `updated_at` | date   | ✓        | RFC 3339 timestamp of last update |
-| `tasks`      | array  | ✓        | Task objects                      |
-
-**Task object (JSON):** `{id: string, title: string, status: string}`
-
-## Multi-Goal Development
-
-teamWERX supports unlimited concurrent goals, each with independent workflows. Different AI agents can work on different goals in parallel.
-
-**Goal identification:** Kebab-case filenames (e.g., `implement-new-login-page.md`)
-
-**Context management:**
-
-- Pass `--goal <id>` to commands to target a specific goal workspace
-
-
-
-**Dependencies:** Add `dependencies` field in goal frontmatter to track prerequisite goals
-
-**Multi-Agent Coordination:**
+Set `TEAMWERX_CI=1` to disable prompts (useful for scripts or CI):
 
 ```bash
-# Agent A (session 1)
-TEAMWERX_CI=1 teamwerx plan add --goal 001-a "Add API endpoint"
-TEAMWERX_CI=1 teamwerx plan list --goal 001-a
-TEAMWERX_CI=1 teamwerx discuss add --goal 001-a "Decided on approach"
-
-# Agent B (session 2)
-TEAMWERX_CI=1 teamwerx plan add --goal 002-b "Write tests"
-TEAMWERX_CI=1 teamwerx plan complete --goal 002-b --task T01
-TEAMWERX_CI=1 teamwerx discuss list --goal 002-b
+TEAMWERX_CI=1 teamwerx plan add --goal 001-demo "Automated task"
 ```
 
-## Common Workflows
+### Custom workspace directories
 
-### Complete Goal Lifecycle
+Override default paths with flags:
 
 ```bash
-# Minimal supported flow
-TEAMWERX_CI=1 teamwerx spec list --specs-dir .teamwerx/specs
-
-# Plan work
-TEAMWERX_CI=1 teamwerx plan add --goals-dir .teamwerx/goals --goal 001-demo "Set up CI"
-TEAMWERX_CI=1 teamwerx plan list --goals-dir .teamwerx/goals --goal 001-demo
-TEAMWERX_CI=1 teamwerx plan complete --goals-dir .teamwerx/goals --goal 001-demo --task T01
-
-# Discuss decisions
-TEAMWERX_CI=1 teamwerx discuss add --goals-dir .teamwerx/goals --goal 001-demo "Initial planning notes"
-TEAMWERX_CI=1 teamwerx discuss list --goals-dir .teamwerx/goals --goal 001-demo
-
-# Manage changes (optional)
-TEAMWERX_CI=1 teamwerx change list --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs
-TEAMWERX_CI=1 teamwerx change resolve --id CH-123 --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs
-
-# Validate workspace
-TEAMWERX_CI=1 teamwerx migrate check --specs-dir .teamwerx/specs --goals-dir .teamwerx/goals --changes-dir .teamwerx/changes
+teamwerx plan list \
+  --goals-dir /path/to/goals \
+  --goal 001-demo
 ```
 
-### Managing Multiple Goals
+### Change proposals
+
+Changes let you propose modifications to specs with conflict detection:
+
+1. Create a change JSON with spec deltas (additions/modifications/removals)
+2. Apply it: `teamwerx change apply --id CH-001`
+3. If conflicts occur, resolve interactively: `teamwerx change resolve --id CH-001`
+4. Archive when done: `teamwerx change archive --id CH-001`
+
+See [docs/spec-merging.md](docs/spec-merging.md) for details on conflict resolution.
+
+### Working with multiple agents
+
+Different AI agents can work on different goals in parallel:
 
 ```bash
-# List tasks for different goals
-TEAMWERX_CI=1 teamwerx plan list --goals-dir .teamwerx/goals --goal 001-demo
-TEAMWERX_CI=1 teamwerx plan list --goals-dir .teamwerx/goals --goal 002-auth
+# Agent A working on authentication
+teamwerx plan add --goal 001-auth "Add OAuth support"
+teamwerx discuss add --goal 001-auth "Using Auth0 for social login"
 
-# Show plan details for a goal
-TEAMWERX_CI=1 teamwerx plan show --goals-dir .teamwerx/goals --goal 001-demo
+# Agent B working on profiles  
+teamwerx plan add --goal 002-profiles "Add bio field"
+teamwerx discuss add --goal 002-profiles "Bio limited to 500 chars"
 ```
 
-### Change Management
-
-teamWERX manages changes via JSON files under a dedicated workspace. Each change lives at `.teamwerx/changes/<id>/change.json` and contains one or more `SpecDelta`s (add/modify/remove requirement operations) to apply to spec domains. Use:
-- `teamwerx change list` to enumerate changes
-- `teamwerx change apply --id <change-id>` to attempt a merge into current specs
-- `teamwerx change resolve --id <change-id>` to interactively handle divergence (refresh base fingerprints or skip domains)
-- `teamwerx change archive --id <change-id>` to move the change folder into `.teamwerx/changes/.archive/<id>/` after application
-
-Flow (high level)
-
-1. Propose (draft)
-   - Create `.teamwerx/changes/<id>/change.json` with desired SpecDelta operations for the target spec domains
-   - Optionally add a discussion entry in the goal’s `discuss.md` to track context and decisions
-2. Review
-   - Discuss in the goal `discuss.md` and iterate until approval.
-3. Apply
-   - Run an explicit `apply` step to import tasks into the canonical plan file (`.teamwerx/goals/00X-<slug>/plan.json`) using the `PlanManager`.
-   - Implementation artifacts are not auto-generated by the CLI; track code changes and notes in your repository as you prefer.
-   - Add a discussion entry to record the apply action for traceability.
-4. Archive
-   - Move the change folder into `.teamwerx/changes/.archive/` and optionally add an archive note to the goal discussion log.
-
-Commands (CLI)
-
-- `teamwerx change list`
-
-  - List change entries discovered under `.teamwerx/changes/*/change.json`.
-  - Read-only; helpful before applying or archiving.
-
-
-
-
-  - List change proposals and their current status.
-
-
-
-  - Display the proposal frontmatter, a tasks summary, and the spec delta excerpt.
-
-
-
-
-
-
-
-
-
-
-
-
-Files read/written (summary)
-
-- Change workspace content:
-  - `.teamwerx/changes/<id>/change.json`
-- When applied:
-  - `.teamwerx/goals/00X-<slug>/plan.json` — tasks are added here (canonical source)
-  - (Optional) `.teamwerx/goals/00X-<slug>/implementation/` — your own implementation notes or artifacts
-- When archived:
-  - `.teamwerx/changes/.archive/<id>-<slug>/` — archived change folder
-
-Integration with existing artifacts and commands
-
-- Single source of truth for tasks: `plan.json` remains authoritative. `changes/*.md` are authoring artifacts until `apply` is invoked.
-- Discussion trace: `discuss --proposal` entries are still used; the change manager appends discovery and apply/archive entries into the goal's `discuss.md` so the audit trail remains in the workspace.
-- Implementation records can be created alongside tasks and tracked in your repository; link commits to task IDs for traceability.
-- Archival of changes uses `.teamwerx/changes/.archive/`.
-
-Quick recipe (copy/paste)
-
-```bash
-# 1) Create a change proposal
-
-
-# 2) Review and refine (edit files and discuss)
-
-teamwerx discuss "Feedback about filter UX" --proposal --goal 002-user-profiles
-
-# 3) Preview apply
-
-
-# 4) Apply the change (imports tasks into plan and creates stubs)
-
-
-# 5) Archive when complete
-
-```
-
-Guidelines & safety notes
-
-
-
-- Use `--yes` only in trusted automation contexts; otherwise the CLI will prompt for confirmation before applying or archiving.
-- The change `id` embeds a numeric prefix and kebab slug (e.g., `001-add-profile-filters`) to make cross-referencing simple.
-
-Command → Primary file mapping (changes)
-
-
-
-
-
-
-See also
-
-- `teamwerx discuss` — keep the debate and acceptance criteria in the discussion log for auditability before you apply a change
-- `teamwerx plan` — after applying changes, review the updated plan and adjust task ordering or dependencies if needed
+Each goal workspace is isolated, so agents don't interfere with each other.
 
 ## Best Practices
 
-### Git Workflow
+### Goal naming
 
-- Commit after each major change (goal creation, plan updates, task completion)
-- Use `[teamWERX]` prefix for commit messages
-- Tag important milestones with git tags
-- Create branches for experimental goals
+Use numbered prefixes for consistent ordering:
+- `001-authentication`
+- `002-user-profiles`
+- `003-payment-integration`
 
-Example:
+### Task granularity
 
-```bash
-git add .teamwerx/
-git commit -m "[teamWERX] Add authentication goal"
-```
+Keep tasks small and actionable:
+- ✅ "Implement login endpoint"
+- ✅ "Add password validation"
+- ❌ "Build entire auth system"
 
-### Goal Management
+### Discussion entries
 
-- Use clear, distinctive goal names to avoid confusion between agents
-- Track dependencies in goal frontmatter when goals depend on each other
+Capture the "why" behind decisions:
+- Design choices and trade-offs
+- Important constraints or requirements
+- Problems encountered and solutions
 
-- Archive completed goals to keep workspace focused
-- Limit number of goals in `in-progress` state simultaneously
+### Git workflow
 
-### Multi-Agent Coordination
-
-- Each agent works on one goal at a time
-- Use separate terminal sessions/IDEs for different agents
-
-- Document blockers in goal status when work is halted
-
-### Research & Discussion
-
-- Capture research notes in `.teamwerx/goals/<id>/research.md` as needed
-- Use `teamwerx discuss` for iterative conversations (multiple rounds)
-- Follow recommended flow: plan → discuss → change (optional) → commit
-
-### Workspace Management
-
-- Commit changes incrementally and reference task IDs (e.g., T01) to keep plan progress traceable
-- Keep `plan.json`, `discuss.md`, `research.md`, and `implementation/` synchronized with actual work
-
-## Error Handling
-
-Commands provide clear, actionable error messages that include:
-
-1. What went wrong
-2. How to fix it
-3. Relevant context (available options, next steps)
-
-**Common error categories:**
-
-- Prerequisites not met (git not initialized, teamWERX not initialized)
-- Resource not found (invalid goal/task/proposal ID)
-- State errors (no current goal set, no pending tasks)
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Archiving
-
-Goal-level archiving is not implemented in the Go CLI. For change proposals, use:
-
-- TEAMWERX_CI=1 teamwerx change archive --id CH-123 --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs
-
-This moves the change folder into `.teamwerx/changes/.archive/<id>/`.
-
-
-
-## Version Tracking
-
-teamWERX uses git-based versioning for all artifacts.
-
-**Version references:** Commit SHAs, tags, or branches (e.g., `a1b2c3d`, `v1.0.0`, `HEAD~1`)
-
-**Examples:**
+Commit your `.teamwerx/` directory alongside code changes:
 
 ```bash
-# View git history for a goal
-git log -- .teamwerx/goals/my-goal.md
-
-# Compare revisions directly with git
-git diff HEAD~1 -- .teamwerx/goals/my-goal.md
-
-# View changes to a workspace
-git log -- .teamwerx/goals/001-my-goal/
+git add .teamwerx/goals/001-auth/
+git commit -m "[teamWERX] Complete login endpoint implementation (T01)"
 ```
 
-## Extensibility
+This creates a complete audit trail of both code and planning decisions.
 
-teamWERX is designed to be extensible. Users can add new commands and new types of artifacts to the framework.
+### Research and summaries
 
-- **New commands**: Add a new Cobra command under `cmd/teamwerx`
-- **New artifact types**: Create a new directory in the `.teamwerx/` directory
+Create `research.md` at the start to capture:
+- Technology options considered
+- Existing solutions reviewed
+- Key constraints identified
 
+Create `summary.md` at the end to capture:
+- What worked well
+- What didn't work
+- Reusable patterns
+- Gotchas for next time
 
+## File Formats
+
+### plan.json
+
+```json
+{
+  "goal_id": "001-demo",
+  "tasks": [
+    {
+      "id": "T01",
+      "title": "Set up CI",
+      "status": "completed"
+    },
+    {
+      "id": "T02", 
+      "title": "Add tests",
+      "status": "pending"
+    }
+  ],
+  "updated_at": "2025-01-15T10:30:00Z"
+}
+```
+
+Task statuses: `pending`, `in-progress`, `completed`
+
+### discuss.md
+
+```markdown
+---
+id: D01
+type: discussion
+timestamp: 2025-01-15T10:00:00Z
+content: Decided to use PostgreSQL for better JSON support
+---
+
+---
+id: D02
+type: discussion
+timestamp: 2025-01-15T11:30:00Z
+content: Added index on user_id for query performance
+---
+```
+
+Each entry is a YAML block with sequential ID (D01, D02, etc.)
+
+## Troubleshooting
+
+### "No plan found for goal"
+
+You need to add at least one task first:
+
+```bash
+teamwerx plan add --goal 001-demo "First task"
+```
+
+This creates the `plan.json` file.
+
+### "Change not found"
+
+Make sure the change ID matches the directory name:
+
+```bash
+# Directory: .teamwerx/changes/CH-001/
+teamwerx change apply --id CH-001
+```
+
+### Validation errors
+
+Check the files directly to see what's wrong:
+
+```bash
+# Verify plan.json exists and is valid JSON
+cat .teamwerx/goals/001-demo/plan.json | jq .
+
+# Check discussion format
+cat .teamwerx/goals/001-demo/discuss.md
+```
 
 ## Requirements
 
-- Go 1.18+ installed
-- Git
+- Go 1.18+ (if building from source)
+- Git (for version control)
 
 ## Development
 
-### Running Tests
-
-```bash
-# Run all tests
-make test
-# Or use go directly
-go test -v ./...
-
-# Run only E2E tests
-go test -v ./internal/core -run E2E_
-```
-
-### Linting
-
-Use golangci-lint:
-
-```bash
-# Run lints
-make lint
-# Or run directly (ensure installed)
-golangci-lint run
-```
+See [CONTRIBUTING-GO.md](CONTRIBUTING-GO.md) for:
+- Building and testing
+- Code organization
+- Adding new commands
+- Release process
 
 ## License
 
 MIT
 
-## Contributing
+## Links
 
-Contributions welcome! Please read [CONTRIBUTING-GO.md](CONTRIBUTING-GO.md) for guidelines on:
-
-- Setting up your development environment
-- Running tests and linters
-- Code style and conventions
-- Submitting pull requests
-
-## Support
-
-For issues and questions, please file an issue on GitHub.
+- **Documentation**: [docs/](docs/)
+- **Issue Tracker**: [GitHub Issues](https://github.com/hollomancer/teamwerx/issues)
+- **Contributing**: [CONTRIBUTING-GO.md](CONTRIBUTING-GO.md)
+- **Migration Guide**: [MIGRATION.md](MIGRATION.md)

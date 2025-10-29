@@ -110,19 +110,6 @@ var (
 		RunE:  runDiscussAdd,
 	}
 
-	migrateCmd = &cobra.Command{
-		Use:   "migrate",
-		Short: "Data migration and validation tools",
-		Long:  "Commands to validate and migrate existing .teamwerx data for compatibility.",
-	}
-
-	migrateCheckCmd = &cobra.Command{
-		Use:   "check",
-		Short: "Validate existing .teamwerx data compatibility",
-		Long:  "Scans specs, goals, and changes to ensure they parse and load correctly.",
-		RunE:  runMigrateCheck,
-	}
-
 	completionCmd = &cobra.Command{
 		Use:   "completion [bash|zsh|fish|powershell]",
 		Short: "Generate shell completion scripts",
@@ -184,10 +171,6 @@ func init() {
 
 	// Completion command
 	rootCmd.AddCommand(completionCmd)
-
-	// Migrate command
-	rootCmd.AddCommand(migrateCmd)
-	migrateCmd.AddCommand(migrateCheckCmd)
 
 	// Flags for discuss
 	discussCmd.PersistentFlags().StringVar(&goalsBaseDir, "goals-dir", ".teamwerx/goals", "Base directory containing goals")
@@ -731,82 +714,4 @@ func runCompletion(cmd *cobra.Command, args []string) error {
 	default:
 		return fmt.Errorf("unsupported shell: %s", args[0])
 	}
-}
-
-func runMigrateCheck(cmd *cobra.Command, args []string) error {
-	app, err := core.NewApp(core.AppOptions{
-		SpecsDir:   specsBaseDir,
-		GoalsDir:   goalsBaseDir,
-		ChangesDir: changesBaseDir,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to init app: %w", err)
-	}
-
-	var errs []string
-
-	// Validate specs: parsing via SpecManager.ListSpecs()
-	specs, err := app.SpecManager.ListSpecs()
-	if err != nil {
-		errs = append(errs, fmt.Sprintf("specs: list failed: %v", err))
-	}
-	specCount := len(specs)
-
-	// Validate goals: plans and discussions
-	goalsEntries, gerr := os.ReadDir(goalsBaseDir)
-	if gerr != nil && !os.IsNotExist(gerr) {
-		errs = append(errs, fmt.Sprintf("goals: read dir failed: %v", gerr))
-	}
-	goalCount := 0
-	for _, e := range goalsEntries {
-		if !e.IsDir() {
-			continue
-		}
-		goalID := e.Name()
-		goalCount++
-
-		// Plan (may not exist)
-		if _, perr := app.PlanManager.Load(goalID); perr != nil {
-			// Only count as error if not a simple not found
-			errs = append(errs, fmt.Sprintf("goal %s: plan load failed: %v", goalID, perr))
-		}
-
-		// Discussion (Load returns empty on missing file)
-		if _, derr := app.DiscussionManager.Load(goalID); derr != nil {
-			errs = append(errs, fmt.Sprintf("goal %s: discussion load failed: %v", goalID, derr))
-		}
-	}
-
-	// Validate changes: list and basic read
-	changes, cerr := app.ChangeManager.ListChanges()
-	if cerr != nil {
-		errs = append(errs, fmt.Sprintf("changes: list failed: %v", cerr))
-	}
-	changeCount := len(changes)
-	for _, ch := range changes {
-		if _, rerr := app.ChangeManager.ReadChange(ch.ID); rerr != nil {
-			errs = append(errs, fmt.Sprintf("change %s: read failed: %v", ch.ID, rerr))
-		}
-	}
-
-	// Summary
-	ok := color.New(color.FgGreen, color.Bold)
-	hdr := color.New(color.FgCyan, color.Bold)
-
-	hdr.Println("Migration compatibility check")
-	fmt.Printf("Specs:   %d\n", specCount)
-	fmt.Printf("Goals:   %d\n", goalCount)
-	fmt.Printf("Changes: %d\n", changeCount)
-
-	if len(errs) == 0 {
-		ok.Println("No issues found. Data is compatible.")
-		return nil
-	}
-
-	// Print errors and return non-zero
-	color.New(color.FgRed, color.Bold).Printf("Found %d issue(s):\n", len(errs))
-	for _, m := range errs {
-		fmt.Printf("- %s\n", m)
-	}
-	return fmt.Errorf("%d validation error(s) found", len(errs))
 }

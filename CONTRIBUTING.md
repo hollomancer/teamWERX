@@ -115,9 +115,6 @@ Changes:
 - `TEAMWERX_CI=1 ./teamwerx change resolve --id CH-123 --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs`
 - `TEAMWERX_CI=1 ./teamwerx change archive --id CH-123 --changes-dir .teamwerx/changes --specs-dir .teamwerx/specs`
 
-Migration check:
-- `TEAMWERX_CI=1 ./teamwerx migrate check --specs-dir .teamwerx/specs --goals-dir .teamwerx/goals --changes-dir .teamwerx/changes`
-
 Shell completions:
 - `./teamwerx completion bash|zsh|fish|powershell`
 
@@ -133,7 +130,6 @@ E2E tests execute the compiled CLI against a temporary workspace:
   - Minimal CLI flow: spec/show → plan add/list/complete/show → discuss add/list
   - Changes: divergence → resolve → re-apply → archive
   - Multi-domain/multi-delta apply
-  - Migration check
 
 Tips:
 - Keep E2E tests fast (disable CGO for builds; small workspaces).
@@ -200,12 +196,6 @@ CLI commands should:
 ---
 
 ## Data migration and validation
-
-- Use `teamwerx migrate check` to validate an existing `.teamwerx` workspace:
-  - Parses specs
-  - Loads plans and discussion logs
-  - Lists and reads changes
-  - Reports counts and any issues; returns non-zero on failure
 
 When editing data formats:
 - Maintain backward compatibility where possible
